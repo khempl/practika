@@ -45,7 +45,7 @@ if (!is_file($filePath)) {
         'errors' => 0,
         'progress' => 0,
         'error_groups' => [],
-        'logs' => [['message' => '❌ файл не найден на сервере (' . $fileId . ')', 'type' => 'error']],
+        'logs' => [['message' => 'файл не найден на сервере (' . $fileId . ')', 'type' => 'error']],
     ];
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
@@ -72,9 +72,21 @@ $state = [
     'errors' => 0,
     'progress' => 0,
     'error_groups' => [],
-    'logs' => [['message' => "🚀 начата обработка файла: {$total} строк", 'type' => 'info']],
+    'logs' => [['message' => "начата обработка файла: {$total} строк", 'type' => 'info']],
     'started_at' => time(),
 ];
 JobStore::save($jobId, $jobsDir, $state);
+
+
+$collection = null;
+try {
+    $collection = getMongoCollection();
+} catch (\Throwable $e) {
+    $state['logs'][] = ['message' => 'не удалось подключиться к mongodb: ' . $e->getMessage(), 'type' => 'error'];
+    $state['status'] = 'error';
+    $state['message'] = 'ошибка подключения к mongodb';
+    JobStore::save($jobId, $jobsDir, $state);
+    exit(1);
+}
 
 fclose($fh);
