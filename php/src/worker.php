@@ -89,4 +89,71 @@ try {
     exit(1);
 }
 
+$batch = [];
+$batchSize = 1000;
+$lineNo = 0;
+
+$errorCounts = ['account' => 0, 'fio' => 0, 'address' => 0, 'period' => 0, 'amount' => 0, 'meter' => 0, 'format' => 0, 'empty' => 0];
+
+$errorHandles = [];
+function getErrorHandle(string $bucket, string $jobId, string $errorsDir, array &$errorHandles)
+{
+    if (!isset($errorHandles[$bucket])) {
+        $fname = "errors_{$bucket}_{$jobId}.txt";
+        $errorHandles[$bucket] = fopen($errorsDir . '/' . $fname, 'a');
+    }
+    return $errorHandles[$bucket];
+}
+
+while (($line = fgets($fh)) !== false) {
+    if (trim($line) === '') {
+        continue;
+    }
+    $lineNo++;
+
+    // выгрузки из 1с/excel часто приходят в windows-1251
+    $raw = $line;
+    if (!mb_check_encoding($raw, 'UTF-8')) {
+        $raw = mb_convert_encoding($raw, 'UTF-8', 'Windows-1251');
+    }
+
+    $result = Parser::parseLine($raw);
+
+    if ($result['ok']) {
+        $batch[] = $result['data'];
+        $state['success']++;
+        if (count($batch) >= $batchSize) {
+            $collection->insertMany($batch);
+            $batch = [];
+        }
+    } else {
+        $state['errors']++;
+        $type = $result['error_type'] ?? 'format';
+        $errorCounts[$type] = ($errorCounts[$type] ?? 0) + 1;
+
+        // фио и приборы - в свои отдельные файлы, всё остальное - в "прочие"
+        $bucket = in_array($type, ['fio', 'meter'], true) ? $type : 'other';
+        $fh2 = getErrorHandle($bucket, $jobId, $errorsDir, $errorHandles);
+        fwrite($fh2, rtrim($raw, "\r\n") . '  =>  ОШИБКА: ' . $result['error'] . PHP_EOL);
+    }
+
+    $state['processed'] = $lineNo;
+}
+
+if (!empty($batch)) {
+    $collection->insertMany($batch);
+}
+
 fclose($fh);
+
+$state['progress'] = 100;
+$state['status'] = 'completed';
+$state['finished_at'] = time();
+$state['logs'][] = ['message' => "обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}", 'type' => 'success'];
+JobStore::save($jobId, $jobsDir, $state);
+
+fclose($fh);
+
+foreach ($errorHandles as $handle) {
+    fclose($handle);
+}
