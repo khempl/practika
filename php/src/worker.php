@@ -12,3 +12,18 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/Parser.php';
 require_once __DIR__ . '/JobStore.php';
+
+
+$fileId = $argv[1] ?? '';
+$jobId = $argv[2] ?? '';
+
+$baseDir = __DIR__;
+$uploadsDir = $baseDir . '/uploads';
+$jobsDir = $baseDir . '/jobs';
+$errorsDir = $baseDir . '/errors';
+
+foreach ([$uploadsDir, $jobsDir, $errorsDir] as $d) {
+    if (!is_dir($d)) {
+        mkdir($d, 0777, true);
+    }
+}
