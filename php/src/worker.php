@@ -50,3 +50,31 @@ if (!is_file($filePath)) {
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
 }
+
+
+// считаем общее количество строк, нужно для прогресс-бара
+$total = 0;
+$fh = fopen($filePath, 'r');
+while (!feof($fh)) {
+    $chunk = fread($fh, 1 << 20);
+    if ($chunk === false) {
+        break;
+    }
+    $total += substr_count($chunk, "\n");
+}
+rewind($fh);
+
+$state = [
+    'status' => 'processing',
+    'total' => $total,
+    'processed' => 0,
+    'success' => 0,
+    'errors' => 0,
+    'progress' => 0,
+    'error_groups' => [],
+    'logs' => [['message' => "🚀 начата обработка файла: {$total} строк", 'type' => 'info']],
+    'started_at' => time(),
+];
+JobStore::save($jobId, $jobsDir, $state);
+
+fclose($fh);
