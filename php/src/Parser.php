@@ -38,11 +38,22 @@ class Parser
             return ['ok' => false, 'error' => "некорректное фио: '$fio'", 'error_type' => 'fio'];
         }
 
+        // адрес: нас.пункт, улица, дом, [квартира]
         $addressParts = array_map('trim', explode(',', $addressRaw));
+        if (count($addressParts) < 3) {
+            return ['ok' => false, 'error' => "некорректный адрес, меньше 3 частей: '$addressRaw'", 'error_type' => 'address'];
+        }
+
+        [$settlement, $street, $house] = array_slice($addressParts, 0, 3);
+        if ($settlement === '' || $street === '' || $house === '') {
+            return ['ok' => false, 'error' => "пустая часть адреса: '$addressRaw'", 'error_type' => 'address'];
+        }
+
+        // всё что после дома - считаем квартирой, может отсутствовать
+        $apartment = count($addressParts) > 3 ? implode(', ', array_slice($addressParts, 3)) : null;
         $settlement = $addressParts[0] ?? '';
         $street = $addressParts[1] ?? '';
         $house = $addressParts[2] ?? '';
-        $apartment = count($addressParts) > 3 ? implode(', ', array_slice($addressParts, 3)) : null;
 
         $totalRaw = trim($rest[0]);
         $total = (float)$totalRaw;
