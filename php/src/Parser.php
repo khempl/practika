@@ -51,12 +51,20 @@ class Parser
 
         // всё что после дома - считаем квартирой, может отсутствовать
         $apartment = count($addressParts) > 3 ? implode(', ', array_slice($addressParts, 3)) : null;
-        $settlement = $addressParts[0] ?? '';
-        $street = $addressParts[1] ?? '';
-        $house = $addressParts[2] ?? '';
 
+        // период начисления - только цифры
+        $period = trim($period);
+        if (!preg_match('/^\d+$/', $period)) {
+            return ['ok' => false, 'error' => "некорректный период начисления: '$period'", 'error_type' => 'period'];
+        }
+
+        // сумма начисления - число с точкой, максимум 2 знака после запятой
         $totalRaw = trim($rest[0]);
+        if (!preg_match('/^\d+(\.\d{1,2})?$/', $totalRaw)) {
+            return ['ok' => false, 'error' => "некорректная сумма начисления: '$totalRaw'", 'error_type' => 'amount'];
+        }
         $total = (float)$totalRaw;
+
         $meters = [];
 
         return [
