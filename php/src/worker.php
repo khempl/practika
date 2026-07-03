@@ -1,0 +1,14 @@
+<?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit("worker.php запускается только из командной строки\n");
+}
+
+set_time_limit(0);
+ini_set('memory_limit', '512M');
+
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/Parser.php';
+require_once __DIR__ . '/JobStore.php';
