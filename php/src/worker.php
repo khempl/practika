@@ -35,6 +35,27 @@ if (!JobStore::isValidId($jobId) || !preg_match('/^[a-f0-9]{32}$/', $fileId)) {
 
 $filePath = $uploadsDir . '/' . $fileId . '.txt';
 
+$fieldLabels = [
+    'account' => 'Лицевой счёт',
+    'fio' => 'ФИО',
+    'address' => 'Адрес',
+    'period' => 'Период начисления',
+    'amount' => 'Сумма начисления',
+    'meter' => 'Прибор учёта',
+    'format' => 'Формат строки',
+];
+
+function recalcErrorGroups(array $errorCounts, array $fieldLabels): array
+{
+    $groups = [];
+    foreach ($errorCounts as $type => $count) {
+        if ($count > 0) {
+            $groups[] = ['field' => $fieldLabels[$type] ?? $type, 'count' => $count];
+        }
+    }
+    return $groups;
+}
+
 if (!is_file($filePath)) {
     $state = [
         'status' => 'error',
@@ -138,6 +159,17 @@ while (($line = fgets($fh)) !== false) {
     }
 
     $state['processed'] = $lineNo;
+
+    $now = microtime(true);
+    if ($lineNo % 2000 === 0 || ($now - $lastSave) > 1.0) {
+        $state['progress'] = $total > 0 ? min(99, (int) floor(($lineNo / $total) * 100)) : 0;
+        $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
+        if ($lineNo % 20000 === 0) {
+            $state['logs'][] = ['message' => "⏳ обработано {$lineNo} из {$total} строк (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
+        }
+        JobStore::save($jobId, $jobsDir, $state);
+        $lastSave = $now;
+    }
 }
 
 if (!empty($batch)) {
@@ -146,14 +178,12 @@ if (!empty($batch)) {
 
 fclose($fh);
 
+$state['processed'] = $lineNo;
 $state['progress'] = 100;
 $state['status'] = 'completed';
+$state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
 $state['finished_at'] = time();
-$state['logs'][] = ['message' => "обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}", 'type' => 'success'];
+$state['logs'][] = ['message' => "🏁 обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}", 'type' => 'success'];
 JobStore::save($jobId, $jobsDir, $state);
 
-fclose($fh);
-
-foreach ($errorHandles as $handle) {
-    fclose($handle);
-}
+@unlink($filePath);
