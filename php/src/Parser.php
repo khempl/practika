@@ -65,7 +65,30 @@ class Parser
         }
         $total = (float)$totalRaw;
 
+        // пары прибор+показание, их может быть 0 и больше, но количество полей должно быть чётным
+        $meterFields = array_slice($rest, 1);
+        if (count($meterFields) % 2 !== 0) {
+            return ['ok' => false, 'error' => 'нечётное количество полей приборов учёта', 'error_type' => 'meter'];
+        }
+
         $meters = [];
+        for ($i = 0; $i < count($meterFields); $i += 2) {
+            $meterName = trim($meterFields[$i]);
+            $meterValueRaw = trim($meterFields[$i + 1]);
+
+            // формат вида "3301660393 ХВС" или "3302248479 СХВ полив"
+            if ($meterName === '' || !preg_match('/^\d+\s+[А-Яа-яЁё\s]+$/u', $meterName)) {
+                return ['ok' => false, 'error' => "некорректный прибор учёта: '$meterName'", 'error_type' => 'meter'];
+            }
+            if (!preg_match('/^\d+(\.\d+)?$/', $meterValueRaw)) {
+                return ['ok' => false, 'error' => "некорректное показание прибора: '$meterValueRaw'", 'error_type' => 'meter'];
+            }
+
+            $meters[] = [
+                'meter_id' => $meterName,
+                'reading' => (float)$meterValueRaw,
+            ];
+        }
 
         return [
             'ok' => true,
