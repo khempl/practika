@@ -58,20 +58,21 @@ function recalcErrorGroups(array $errorCounts, array $fieldLabels): array
 
 if (!is_file($filePath)) {
     $state = [
-        'status' => 'processing',
-        'total' => $total,
+        'status' => 'error',
+        'message' => 'загруженный файл не найден на сервере',
+        'total' => 0,
         'processed' => 0,
         'success' => 0,
         'errors' => 0,
         'duplicates' => 0,
         'progress' => 0,
         'error_groups' => [],
-        'logs' => [['message' => "начата обработка файла: {$total} строк", 'type' => 'info']],
-        'started_at' => time(),
+        'logs' => [['message' => 'файл не найден на сервере (' . $fileId . ')', 'type' => 'error']],
     ];
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
 }
+
 
 
 // считаем общее количество строк, нужно для прогресс-бара
@@ -175,6 +176,7 @@ function insertBatch($collection, array &$batch, array &$state): void
 }
 
 $seenHashes = []; // хеши записей, уже встреченных в этом файле
+$lastSave = microtime(true);
 
 while (($line = fgets($fh)) !== false) {
     if (trim($line) === '') {
