@@ -58,15 +58,16 @@ function recalcErrorGroups(array $errorCounts, array $fieldLabels): array
 
 if (!is_file($filePath)) {
     $state = [
-        'status' => 'error',
-        'message' => 'загруженный файл не найден на сервере',
-        'total' => 0,
+        'status' => 'processing',
+        'total' => $total,
         'processed' => 0,
         'success' => 0,
         'errors' => 0,
+        'duplicates' => 0,
         'progress' => 0,
         'error_groups' => [],
-        'logs' => [['message' => 'файл не найден на сервере (' . $fileId . ')', 'type' => 'error']],
+        'logs' => [['message' => "начата обработка файла: {$total} строк", 'type' => 'info']],
+        'started_at' => time(),
     ];
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
@@ -99,16 +100,37 @@ $state = [
 JobStore::save($jobId, $jobsDir, $state);
 
 
+// подключаемся с несколькими попытками - если база на секунду "моргнёт",
+// воркер не должен падать сразу
 $collection = null;
-try {
-    $collection = getMongoCollection();
-} catch (\Throwable $e) {
-    $state['logs'][] = ['message' => 'не удалось подключиться к mongodb: ' . $e->getMessage(), 'type' => 'error'];
+$attempts = 5;
+$lastError = null;
+
+for ($i = 1; $i <= $attempts; $i++) {
+    try {
+        $collection = getMongoCollection();
+        $collection->countDocuments([], ['limit' => 1]);
+        break;
+    } catch (\Throwable $e) {
+        $lastError = $e;
+        if ($i < $attempts) {
+            sleep(2);
+        }
+    }
+}
+
+if ($collection === null) {
+    $state['logs'][] = ['message' => 'не удалось подключиться к mongodb: ' . $lastError->getMessage(), 'type' => 'error'];
     $state['status'] = 'error';
     $state['message'] = 'ошибка подключения к mongodb';
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
 }
+
+// индексы: уникальный - для дедупликации, обычные - для быстрого поиска
+$collection->createIndex(['dedup_hash' => 1], ['unique' => true]);
+$collection->createIndex(['account_number' => 1]);
+$collection->createIndex(['address.settlement' => 1]);
 
 $batch = [];
 $batchSize = 1000;
@@ -165,7 +187,7 @@ while (($line = fgets($fh)) !== false) {
         $state['progress'] = $total > 0 ? min(99, (int) floor(($lineNo / $total) * 100)) : 0;
         $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
         if ($lineNo % 20000 === 0) {
-            $state['logs'][] = ['message' => "⏳ обработано {$lineNo} из {$total} строк (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
+            $state['logs'][] = ['message' => "обработано {$lineNo} из {$total} строк (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
         }
         JobStore::save($jobId, $jobsDir, $state);
         $lastSave = $now;
@@ -183,7 +205,7 @@ $state['progress'] = 100;
 $state['status'] = 'completed';
 $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
 $state['finished_at'] = time();
-$state['logs'][] = ['message' => "🏁 обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}", 'type' => 'success'];
+$state['logs'][] = ['message' => "обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}", 'type' => 'success'];
 JobStore::save($jobId, $jobsDir, $state);
 
 @unlink($filePath);
