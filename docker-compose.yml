@@ -1,26 +1,50 @@
-version: '3.8'
-
 services:
   mongodb:
     image: mongo:7
-    container_name: zhkh_mongo
+    container_name: mongo_db
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin_password
     volumes:
       - mongo_data:/data/db
-    ports:
-      - "27017:27017"
 
-  web:
-    build: .
-    container_name: zhkh_layout
+  mongo-express:
+    image: mongo-express
+    container_name: mongo_express
     restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin_password
+      ME_CONFIG_MONGODB_SERVER: mongodb
     depends_on:
       - mongodb
     ports:
+      - "8081:8081"
+
+  php:
+    build: ./php
+    container_name: php_app
+    restart: always
+    environment:
+      MONGO_URI: "mongodb://admin:admin_password@mongodb:27017"
+    volumes:
+      - ./errors:/var/www/html/errors
+      - ./uploads:/var/www/html/uploads
+      - ./jobs:/var/www/html/jobs
+    depends_on:
+      - mongodb
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    container_name: nginx_web
+    restart: always
+    ports:
       - "8080:80"
+    depends_on:
+      - php
 
 volumes:
   mongo_data:
