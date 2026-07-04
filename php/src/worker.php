@@ -64,6 +64,7 @@ if (!is_file($filePath)) {
         'processed' => 0,
         'success' => 0,
         'errors' => 0,
+        'duplicates' => 0,
         'progress' => 0,
         'error_groups' => [],
         'logs' => [['message' => 'файл не найден на сервере (' . $fileId . ')', 'type' => 'error']],
@@ -71,6 +72,7 @@ if (!is_file($filePath)) {
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
 }
+
 
 
 // считаем общее количество строк, нужно для прогресс-бара
@@ -99,16 +101,37 @@ $state = [
 JobStore::save($jobId, $jobsDir, $state);
 
 
+// подключаемся с несколькими попытками - если база на секунду "моргнёт",
+// воркер не должен падать сразу
 $collection = null;
-try {
-    $collection = getMongoCollection();
-} catch (\Throwable $e) {
-    $state['logs'][] = ['message' => 'не удалось подключиться к mongodb: ' . $e->getMessage(), 'type' => 'error'];
+$attempts = 5;
+$lastError = null;
+
+for ($i = 1; $i <= $attempts; $i++) {
+    try {
+        $collection = getMongoCollection();
+        $collection->countDocuments([], ['limit' => 1]);
+        break;
+    } catch (\Throwable $e) {
+        $lastError = $e;
+        if ($i < $attempts) {
+            sleep(2);
+        }
+    }
+}
+
+if ($collection === null) {
+    $state['logs'][] = ['message' => 'не удалось подключиться к mongodb: ' . $lastError->getMessage(), 'type' => 'error'];
     $state['status'] = 'error';
     $state['message'] = 'ошибка подключения к mongodb';
     JobStore::save($jobId, $jobsDir, $state);
     exit(1);
 }
+
+// индексы: уникальный - для дедупликации, обычные - для быстрого поиска
+$collection->createIndex(['dedup_hash' => 1], ['unique' => true]);
+$collection->createIndex(['account_number' => 1]);
+$collection->createIndex(['address.settlement' => 1]);
 
 $batch = [];
 $batchSize = 1000;
@@ -126,6 +149,35 @@ function getErrorHandle(string $bucket, string $jobId, string $errorsDir, array 
     return $errorHandles[$bucket];
 }
 
+// вставляет пачку записей, отдельно считает сколько реально добавилось,
+// а сколько отсеялось как дубликат уже существующей в базе записи
+// (ordered => false значит: даже если часть пачки - дубли, остальные всё равно вставятся)
+function insertBatch($collection, array &$batch, array &$state): void
+{
+    if (empty($batch)) {
+        return;
+    }
+
+    try {
+        $result = $collection->insertMany($batch, ['ordered' => false]);
+    } catch (\MongoDB\Driver\Exception\BulkWriteException $e) {
+        $writeResult = $e->getWriteResult();
+        foreach ($writeResult->getWriteErrors() as $writeError) {
+            if ($writeError->getCode() === 11000) {
+                // 11000 - код ошибки mongo "дубликат по уникальному индексу"
+                $state['duplicates']++;
+            } else {
+                $state['errors']++;
+            }
+        }
+    }
+
+    $batch = [];
+}
+
+$seenHashes = []; // хеши записей, уже встреченных в этом файле
+$lastSave = microtime(true);
+
 while (($line = fgets($fh)) !== false) {
     if (trim($line) === '') {
         continue;
@@ -141,13 +193,23 @@ while (($line = fgets($fh)) !== false) {
     $result = Parser::parseLine($raw);
 
     if ($result['ok']) {
-        $batch[] = $result['data'];
-        $state['success']++;
-        if (count($batch) >= $batchSize) {
-            $collection->insertMany($batch);
-            $batch = [];
+        $hash = Parser::computeHash($result['data']);
+
+        // дубликат внутри самого файла - пропускаем, не доходя до базы
+        if (isset($seenHashes[$hash])) {
+            $state['duplicates']++;
+        } else {
+            $seenHashes[$hash] = true;
+            $result['data']['dedup_hash'] = $hash;
+            $batch[] = $result['data'];
+            $state['success']++;
         }
-    } else {
+
+        if (count($batch) >= $batchSize) {
+            insertBatch($collection, $batch, $state);
+        }
+    } 
+    else {
         $state['errors']++;
         $type = $result['error_type'] ?? 'format';
         $errorCounts[$type] = ($errorCounts[$type] ?? 0) + 1;
@@ -165,7 +227,7 @@ while (($line = fgets($fh)) !== false) {
         $state['progress'] = $total > 0 ? min(99, (int) floor(($lineNo / $total) * 100)) : 0;
         $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
         if ($lineNo % 20000 === 0) {
-            $state['logs'][] = ['message' => "⏳ обработано {$lineNo} из {$total} строк (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
+            $state['logs'][] = ['message' => "обработано {$lineNo} из {$total} строк (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
         }
         JobStore::save($jobId, $jobsDir, $state);
         $lastSave = $now;
@@ -173,7 +235,7 @@ while (($line = fgets($fh)) !== false) {
 }
 
 if (!empty($batch)) {
-    $collection->insertMany($batch);
+    insertBatch($collection, $batch, $state);
 }
 
 fclose($fh);
@@ -183,7 +245,7 @@ $state['progress'] = 100;
 $state['status'] = 'completed';
 $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
 $state['finished_at'] = time();
-$state['logs'][] = ['message' => "🏁 обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}", 'type' => 'success'];
+$state['logs'][] = ['message' => "обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}, дублей: {$state['duplicates']}", 'type' => 'success'];
 JobStore::save($jobId, $jobsDir, $state);
 
 @unlink($filePath);
