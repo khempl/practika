@@ -63,7 +63,7 @@ class Parser
         if (!preg_match('/^\d+(\.\d{1,2})?$/', $totalRaw)) {
             return ['ok' => false, 'error' => "некорректная сумма начисления: '$totalRaw'", 'error_type' => 'amount'];
         }
-        $total = (float)$totalRaw;
+        $total = (float) $totalRaw;
 
         // пары прибор+показание, их может быть 0 и больше, но количество полей должно быть чётным
         $meterFields = array_slice($rest, 1);
@@ -86,7 +86,7 @@ class Parser
 
             $meters[] = [
                 'meter_id' => $meterName,
-                'reading' => (float)$meterValueRaw,
+                'reading' => (float) $meterValueRaw,
             ];
         }
 
@@ -107,5 +107,19 @@ class Parser
                 'created_at' => new MongoDB\BSON\UTCDateTime(),
             ],
         ];
+    }
+
+    // считает хеш от значимых полей записи - используется для дедупликации
+    // если у двух строк одинаковый счёт, период, сумма и показания приборов - это дубль
+    // если хоть одно из этих полей отличается - это разные записи, даже при том же счёте
+    public static function computeHash(array $data): string
+    {
+        $meterString = implode('|', array_map(function ($m) {
+            return $m['meter_id'] . ':' . $m['reading'];
+        }, $data['meters']));
+
+        $raw = $data['account_number'] . '|' . $data['period'] . '|' . $data['total_amount'] . '|' . $meterString;
+
+        return hash('sha256', $raw);
     }
 }
