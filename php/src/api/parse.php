@@ -43,7 +43,7 @@ if (!function_exists('exec')) {
     exit;
 }
 
-$phpBin = PHP_BINARY ?: '/usr/local/bin/php';
+$phpBin = '/usr/local/bin/php';
 $workerScript = __DIR__ . '/../worker.php';
 
 // запускаем полностью отдельный процесс (детач через &, вывод в /dev/null),
