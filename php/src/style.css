@@ -1,0 +1,68 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+    padding: 40px 20px;
+}
+.container {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.container.wide {
+    max-width: 1100px;
+}
+h1 { font-size: 22px; margin-top: 0; }
+h2 { font-size: 17px; }
+section { margin-bottom: 20px; }
+label {
+    display: block;
+    margin: 10px 0;
+    font-size: 14px;
+}
+input[type=text], input[type=file] {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+fieldset {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin: 15px 0;
+}
+.meter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+button {
+    background: #2f6fed;
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+button:hover { background: #1e56c9; }
+.ok { color: #1a7a1a; }
+.err { color: #c0392b; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+th { background: #f0f0f0; }
