@@ -93,6 +93,7 @@ $state = [
     'processed' => 0,
     'success' => 0,
     'errors' => 0,
+    'duplicates' => 0,
     'progress' => 0,
     'error_groups' => [],
     'logs' => [['message' => "начата обработка файла: {$total} строк", 'type' => 'info']],
