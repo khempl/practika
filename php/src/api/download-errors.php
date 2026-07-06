@@ -24,17 +24,20 @@ if (count($files) === 1) {
     header('Content-Disposition: attachment; filename="' . basename($f) . '"');
     header('Content-Length: ' . filesize($f));
     readfile($f);
+    unlink($f);
     exit;
 }
 
 if (!class_exists('ZipArchive')) {
-    // fallback, если php-zip не установлен: отдаём файлы один за другим склеенными в один txt
     header('Content-Type: text/plain; charset=utf-8');
     header('Content-Disposition: attachment; filename="errors_' . $jobId . '.txt"');
     foreach ($files as $f) {
         echo '===== ' . basename($f) . ' =====' . PHP_EOL;
         readfile($f);
         echo PHP_EOL;
+    }
+    foreach ($files as $f) {
+        unlink($f);
     }
     exit;
 }
@@ -52,3 +55,6 @@ header('Content-Disposition: attachment; filename="errors_' . $jobId . '.zip"');
 header('Content-Length: ' . filesize($zipPath));
 readfile($zipPath);
 unlink($zipPath);
+foreach ($files as $f) {
+    unlink($f);
+}
