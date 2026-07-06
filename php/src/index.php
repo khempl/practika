@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -257,8 +258,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .file-info {
@@ -287,6 +295,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="container py-4 py-md-5">
@@ -298,7 +307,8 @@
                     <h1 class="fw-bold" style="color: #0f172a;">
                         <i class="fas fa-file-import text-primary me-3"></i>Парсер ЖКХ
                     </h1>
-                    <p class="text-muted">Загрузите файл с платежными документами. Система обработает до 700 000 строк.</p>
+                    <p class="text-muted">Загрузите файл с платежными документами. Система обработает до 700 000 строк.
+                    </p>
                     <p class="small"><a href="list.php">Посмотреть записи в базе</a></p>
                 </div>
 
@@ -336,14 +346,22 @@
                             </button>
                         </div>
 
+                        <button onclick="clearDatabase()"
+                            style="background:#dc2626; color:#fff; border:none; margin: 10px; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px;">
+                            🗑️ Очистить базу
+                        </button>
+
                         <!-- Прогресс -->
                         <div id="progressArea" class="mt-4" style="display:none;">
                             <div class="d-flex justify-content-between small mb-1">
-                                <span><i class="fas fa-spinner fa-spin me-2"></i>Обработка...</span>
+                                <span id="progressLabel"><i class="fas fa-spinner fa-spin me-2"
+                                        id="progressIcon"></i><span id="progressText">Обработка...</span></span>
                                 <span id="progressPercent" class="fw-bold">0%</span>
                             </div>
                             <div class="progress-custom">
-                                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;">
+                                <div id="progressBar"
+                                    class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                                    role="progressbar" style="width: 0%;">
                                     0%
                                 </div>
                             </div>
@@ -444,7 +462,7 @@
 
     <!-- Полная логика -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
 
             // ----- DOM элементы -----
             const dropZone = document.getElementById('dropZone');
@@ -603,6 +621,7 @@
                 startBtn.disabled = false;
                 startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
                 startBtn.className = 'btn btn-primary-gradient px-5';
+                startBtn.dataset.mode = 'start';
 
                 // Не очищаем логи и не удаляем файл
             }
@@ -634,17 +653,17 @@
 
             // ----- Drag & Drop -----
 
-            dropZone.addEventListener('dragover', function(e) {
+            dropZone.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 this.classList.add('dragover');
             });
 
-            dropZone.addEventListener('dragleave', function(e) {
+            dropZone.addEventListener('dragleave', function (e) {
                 e.preventDefault();
                 this.classList.remove('dragover');
             });
 
-            dropZone.addEventListener('drop', function(e) {
+            dropZone.addEventListener('drop', function (e) {
                 e.preventDefault();
                 this.classList.remove('dragover');
                 const files = e.dataTransfer.files;
@@ -655,11 +674,11 @@
                 }
             });
 
-            dropZone.addEventListener('click', function() {
+            dropZone.addEventListener('click', function () {
                 fileInput.click();
             });
 
-            fileInput.addEventListener('change', function() {
+            fileInput.addEventListener('change', function () {
                 if (this.files.length > 0) {
                     handleFile(this.files[0]);
                 }
@@ -669,9 +688,16 @@
 
             // ----- Запуск парсинга -----
 
-            startBtn.addEventListener('click', function() {
+            startBtn.addEventListener('click', function () {
                 if (!selectedFile) {
                     addLog('⚠️ Сначала выберите файл!', 'error');
+                    return;
+                }
+
+                if (startBtn.dataset.mode === 'done') {
+                    resetAll();
+                    removeFile();
+                    clearLogs();
                     return;
                 }
 
@@ -686,26 +712,64 @@
                 startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
                 logCursor = 0;
 
-                fetch('api/upload.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            addLog('✅ Файл загружен, ID: ' + data.file_id, 'success');
-                            startParsing(data.file_id);
-                        } else {
-                            addLog('❌ Ошибка загрузки: ' + (data.message || 'неизвестная ошибка'), 'error');
-                            startBtn.disabled = false;
-                            startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+                let uploadProgressLogEl = null;
+
+                function updateUploadProgressLog(message) {
+                    if (!uploadProgressLogEl) {
+                        // создаём строку в логе один раз при первом вызове
+                        uploadProgressLogEl = document.createElement('div');
+                        logContainer.appendChild(uploadProgressLogEl);
+                    }
+                    uploadProgressLogEl.textContent = message;
+                }
+
+                const xhr = new XMLHttpRequest();
+                let lastLoggedPercent = -1;
+
+                // прогресс отправки файла на сервер - обновляем одну и ту же строку в логе,
+                // а не плодим новую при каждом срабатывании события
+                xhr.upload.addEventListener('progress', (event) => {
+                    if (event.lengthComputable) {
+                        const loadedMb = (event.loaded / 1024 / 1024).toFixed(1);
+                        const totalMb = (event.total / 1024 / 1024).toFixed(1);
+                        const percent = Math.round((event.loaded / event.total) * 100);
+
+                        if (percent !== lastLoggedPercent) {
+                            updateUploadProgressLog(`📤 Отправка файла: ${loadedMb} МБ из ${totalMb} МБ (${percent}%)`);
+                            lastLoggedPercent = percent;
                         }
-                    })
-                    .catch(err => {
-                        addLog('❌ Ошибка соединения: ' + err.message, 'error');
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    let data;
+                    try {
+                        data = JSON.parse(xhr.responseText);
+                    } catch (e) {
+                        addLog('❌ Сервер вернул некорректный ответ', 'error');
                         startBtn.disabled = false;
                         startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
-                    });
+                        return;
+                    }
+
+                    if (data.success) {
+                        addLog('✅ Файл загружен, ID: ' + data.file_id, 'success');
+                        startParsing(data.file_id);
+                    } else {
+                        addLog('❌ Ошибка загрузки: ' + (data.message || 'неизвестная ошибка'), 'error');
+                        startBtn.disabled = false;
+                        startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    addLog('❌ Ошибка соединения при загрузке файла', 'error');
+                    startBtn.disabled = false;
+                    startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+                });
+
+                xhr.open('POST', 'api/upload.php');
+                xhr.send(formData);
             });
 
             function startParsing(fileId) {
@@ -714,7 +778,20 @@
                 setStatus('processing', '⏳ Обработка...');
                 startTime = Date.now();
 
-                timerInterval = setInterval(function() {
+                const progressIcon = document.getElementById('progressIcon');
+                const progressText = document.getElementById('progressText');
+                const progressBar = document.getElementById('progressBar');
+                const progressPercent = document.getElementById('progressPercent');
+
+                progressIcon.className = 'fas fa-spinner fa-spin me-2';
+                progressText.textContent = 'Обработка...';
+                progressBar.classList.remove('bg-success', 'bg-danger');
+                progressBar.classList.add('bg-primary', 'progress-bar-animated');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                progressPercent.textContent = '0%';
+
+                timerInterval = setInterval(function () {
                     const elapsed = Math.floor((Date.now() - startTime) / 1000);
                     elapsedTime.textContent = formatTime(elapsed);
                 }, 1000);
@@ -723,10 +800,10 @@
                 startBtn.disabled = true;
 
                 fetch('api/parse.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ file_id: fileId })
-                    })
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_id: fileId })
+                })
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
@@ -770,10 +847,22 @@
                             startBtn.disabled = false;
                             startBtn.innerHTML = '<i class="fas fa-check me-2"></i>Готово';
                             startBtn.className = 'btn btn-success px-5';
+                            startBtn.dataset.mode = 'done';
+                            const progressIcon = document.getElementById('progressIcon');
+                            const progressText = document.getElementById('progressText');
+                            const progressBar = document.getElementById('progressBar');
 
                             if (data.status === 'completed') {
+                                progressIcon.className = 'fas fa-check-circle me-2 text-success';
+                                progressText.textContent = 'Завершено';
+                                progressBar.classList.remove('progress-bar-animated', 'bg-primary');
+                                progressBar.classList.add('bg-success');
                                 addLog('🏁 Обработка завершена успешно!', 'success');
                             } else {
+                                progressIcon.className = 'fas fa-times-circle me-2 text-danger';
+                                progressText.textContent = 'Завершено с ошибками';
+                                progressBar.classList.remove('progress-bar-animated', 'bg-primary');
+                                progressBar.classList.add('bg-danger');
                                 addLog('❌ Обработка завершена с ошибками', 'error');
                             }
 
@@ -792,7 +881,7 @@
 
             // ----- Сброс -----
 
-            resetBtn.addEventListener('click', function() {
+            resetBtn.addEventListener('click', function () {
                 if (isProcessing) {
                     if (!confirm('Обработка ещё идёт. Вы уверены, что хотите сбросить?')) return;
                 }
@@ -802,14 +891,14 @@
 
             // ----- Очистка логов -----
 
-            clearLogsBtn.addEventListener('click', function() {
+            clearLogsBtn.addEventListener('click', function () {
                 clearLogs();
                 addLog('🧹 Лог очищен', 'info');
             });
 
             // ----- Скачивание ошибок -----
 
-            downloadErrorsBtn.addEventListener('click', function() {
+            downloadErrorsBtn.addEventListener('click', function () {
                 if (currentJobId) {
                     window.location.href = 'api/download-errors.php?job_id=' + currentJobId;
                 } else {
@@ -825,7 +914,26 @@
             addLog('💡 Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
 
         });
+
+        function clearDatabase() {
+            if (!confirm('Точно удалить ВСЕ записи из базы?')) {
+                return;
+            }
+
+            fetch('api/clear.php', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Удалено записей: ' + data.deleted_count);
+                        location.reload();
+                    } else {
+                        alert('Ошибка: ' + data.message);
+                    }
+                })
+                .catch(err => alert('Ошибка соединения: ' + err.message));
+        };
     </script>
 
 </body>
+
 </html>
