@@ -623,6 +623,8 @@
                 startBtn.className = 'btn btn-primary-gradient px-5';
                 startBtn.dataset.mode = 'start';
 
+                resetDownloadButton();
+
                 // Не очищаем логи и не удаляем файл
             }
 
@@ -808,6 +810,7 @@
                     .then(data => {
                         if (data.success) {
                             currentJobId = data.job_id;
+                            resetDownloadButton();
                             addLog('🚀 Парсинг запущен, Job ID: ' + data.job_id, 'success');
                             if (statusInterval) clearInterval(statusInterval);
                             statusInterval = setInterval(fetchStatus, 1500);
@@ -899,11 +902,14 @@
             // ----- Скачивание ошибок -----
 
             downloadErrorsBtn.addEventListener('click', function () {
+                if (this.disabled) return;
                 if (currentJobId) {
                     window.location.href = 'api/download-errors.php?job_id=' + currentJobId;
                 } else {
                     addLog('⚠️ Нет данных об ошибках для скачивания', 'error');
                 }
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-check me-2"></i>Скачано';
             });
 
             // ----- Инициализация -----
@@ -931,6 +937,12 @@
                     }
                 })
                 .catch(err => alert('Ошибка соединения: ' + err.message));
+        };
+
+        function resetDownloadButton() {
+            downloadErrorsBtn.disabled = false;
+            downloadErrorsBtn.innerHTML = '<i class="fas fa-download me-2"></i>Скачать файл с ошибками';
+            downloadErrorsBtn.className = 'btn btn-outline-danger btn-sm';
         };
     </script>
 
