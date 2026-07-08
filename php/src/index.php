@@ -307,9 +307,13 @@
                     <h1 class="fw-bold" style="color: #0f172a;">
                         <i class="fas fa-file-import text-primary me-3"></i>Парсер ЖКХ
                     </h1>
-                    <p class="text-muted">Загрузите файл с платежными документами. Система обработает до 700 000 строк.
+                    <p class="text-muted">Загрузите файл с платежными документами. Система обработает 700 000+ строк.
                     </p>
                     <p class="small"><a href="list.php">Посмотреть записи в базе</a></p>
+                    <button onclick="clearDatabase()"
+                            style="background:#dc2626; color:#fff; border:none; margin: 10px; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px;">
+                            🗑️ Очистить базу данных
+                    </button>
                 </div>
 
                 <!-- Основная карточка -->
@@ -348,7 +352,7 @@
 
                         <button onclick="clearDatabase()"
                             style="background:#dc2626; color:#fff; border:none; margin: 10px; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px;">
-                            🗑️ Очистить базу
+                            🗑️ Очистить базу данных
                         </button>
 
                         <!-- Прогресс -->
@@ -425,7 +429,7 @@
                                     <span id="logCount" class="badge bg-secondary ms-2">0</span>
                                 </h6>
                                 <button class="btn btn-sm btn-outline-secondary" id="clearLogsBtn">
-                                    <i class="fas fa-eraser me-1"></i>Очистить
+                                    <i class="fas fa-eraser me-1"></i>Очистить лог
                                 </button>
                             </div>
                             <div class="log-container" id="logContainer">
@@ -441,7 +445,7 @@
                                 <i class="fas fa-play me-2"></i>Запустить парсинг
                             </button>
                             <button class="btn btn-outline-secondary" id="resetBtn">
-                                <i class="fas fa-undo me-2"></i>Сбросить
+                                <i class="fas fa-undo me-2"></i>Сбросить парсинг
                             </button>
                         </div>
 
