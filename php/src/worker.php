@@ -76,16 +76,8 @@ if (!is_file($filePath)) {
 
 
 // считаем общее количество строк, нужно для прогресс-бара
-$total = 0;
+$totalBytes = filesize($filePath);
 $fh = fopen($filePath, 'r');
-while (!feof($fh)) {
-    $chunk = fread($fh, 1 << 20);
-    if ($chunk === false) {
-        break;
-    }
-    $total += substr_count($chunk, "\n");
-}
-rewind($fh);
 
 $sample = fread($fh, 65536);
 rewind($fh);
@@ -226,10 +218,10 @@ while (($line = fgets($fh)) !== false) {
 
     $now = microtime(true);
     if ($lineNo % 2000 === 0 || ($now - $lastSave) > 1.0) {
-        $state['progress'] = $total > 0 ? min(99, (int) floor(($lineNo / $total) * 100)) : 0;
+        $state['progress'] = $totalBytes > 0 ? min(99, (int) floor((ftell($fh) / $totalBytes) * 100)) : 0;
         $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
         if ($lineNo % 20000 === 0) {
-            $state['logs'][] = ['message' => "обработано {$lineNo} из {$total} строк (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
+            $state['logs'][] = ['message' => "обработано {$lineNo} строк, " . round(ftell($fh) / 1024 / 1024, 1) . " МБ из " . round($totalBytes / 1024 / 1024, 1) . " МБ (успешно: {$state['success']}, ошибок: {$state['errors']})", 'type' => 'info'];
         }
         JobStore::save($jobId, $jobsDir, $state);
         $lastSave = $now;
