@@ -53,6 +53,7 @@ if (count($files) === 1) {
     header('Content-Length: ' . filesize($f));
     readfile($f);
     unlink($f); // Удаляем файл после скачивания
+    unlink($f);
     exit;
 }
 
@@ -97,4 +98,5 @@ readfile($zipPath);
 unlink($zipPath);
 foreach ($files as $f) {
     unlink($f);
+}
 }

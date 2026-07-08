@@ -87,12 +87,17 @@ while (!feof($fh)) {
 }
 rewind($fh);
 
+$sample = fread($fh, 65536);
+rewind($fh);
+$needsConversion = !mb_check_encoding($sample, 'UTF-8');
+
 $state = [
     'status' => 'processing',
     'total' => $total,
     'processed' => 0,
     'success' => 0,
     'errors' => 0,
+    'duplicates' => 0,
     'progress' => 0,
     'error_groups' => [],
     'logs' => [['message' => "начата обработка файла: {$total} строк", 'type' => 'info']],
@@ -134,7 +139,7 @@ $collection->createIndex(['account_number' => 1]);
 $collection->createIndex(['address.settlement' => 1]);
 
 $batch = [];
-$batchSize = 1000;
+$batchSize = 5000;
 $lineNo = 0;
 
 $errorCounts = ['account' => 0, 'fio' => 0, 'address' => 0, 'period' => 0, 'amount' => 0, 'meter' => 0, 'format' => 0, 'empty' => 0];
@@ -184,11 +189,8 @@ while (($line = fgets($fh)) !== false) {
     }
     $lineNo++;
 
-    // выгрузки из 1с/excel часто приходят в windows-1251
-    $raw = $line;
-    if (!mb_check_encoding($raw, 'UTF-8')) {
-        $raw = mb_convert_encoding($raw, 'UTF-8', 'Windows-1251');
-    }
+    // кодировка определена один раз до цикла - здесь просто применяем результат
+    $raw = $needsConversion ? mb_convert_encoding($line, 'UTF-8', 'Windows-1251') : $line;
 
     $result = Parser::parseLine($raw);
 

@@ -90,6 +90,8 @@ if (!function_exists('exec')) {
 // ------------------------------------------------------------
 $phpBin = '/usr/local/bin/php';                    // Путь к PHP CLI
 $workerScript = __DIR__ . '/../worker.php';        // Путь к скрипту-воркеру
+$phpBin = '/usr/local/bin/php';
+$workerScript = __DIR__ . '/../worker.php';
 
 // Формируем команду: запускаем worker с аргументами file_id и job_id
 // > /dev/null 2>&1 — перенаправляем весь вывод в никуда (чтобы процесс не блокировал HTTP-ответ)
