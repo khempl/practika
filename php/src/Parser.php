@@ -17,13 +17,13 @@ class Parser
         if (end($parts) === '') {
             array_pop($parts);
         }
-
-        // должно быть минимум 5 полей: счёт, фио, адрес, период, сумма
-        if (count($parts) < 5) {
-            return ['ok' => false, 'error' => 'недостаточно полей, меньше 5', 'error_type' => 'format'];
+        // минимальный набор без ФИО: счёт, адрес, период, сумма (4 поля).
+        // если ФИО на месте - полей будет 5+, это нормально, проверим ниже
+        if (count($parts) < 4) {
+            return ['ok' => false, 'error' => 'недостаточно полей, меньше 4', 'error_type' => 'format'];
         }
 
-        [$account, $fio, $addressRaw, $period] = array_slice($parts, 0, 4);
+        [$account, $fioCandidate, $addressCandidate, $periodCandidate] = array_slice($parts, 0, 4);
         $rest = array_slice($parts, 4);
 
         // лицевой счёт - только цифры
@@ -32,10 +32,27 @@ class Parser
             return ['ok' => false, 'error' => "некорректный лицевой счёт: '$account'", 'error_type' => 'account'];
         }
 
-        // фио - буквы, пробелы, точки, звёздочки (в тестовых данных фио скрыто звёздочками)
-        $fio = trim($fio);
-        if ($fio === '' || !preg_match('/^[А-Яа-яЁёA-Za-z\-\s\.\*]+$/u', $fio)) {
-            return ['ok' => false, 'error' => "некорректное фио: '$fio'", 'error_type' => 'fio'];
+        // иногда в строке вообще нет поля ФИО - тогда сразу после счёта идёт адрес.
+        // отличаем это от настоящего ФИО по количеству частей через запятую:
+        // у адреса их всегда минимум 3 (нас.пункт, улица, дом), у ФИО с запятой - максимум 1-2
+        $fioCandidateParts = explode(',', $fioCandidate);
+
+        if (count($fioCandidateParts) >= 3) {
+            $fio = 'не указано';
+            $addressRaw = $fioCandidate;
+            $period = $addressCandidate;
+            $rest = array_merge([$periodCandidate], $rest);
+        } else {
+            $fio = trim($fioCandidate);
+            $addressRaw = $addressCandidate;
+            $period = $periodCandidate;
+
+            // ФИО не прошло по формату (пустое, цифры, не на своём месте и т.п.) -
+            // не отбрасываем всю строку целиком, просто помечаем ФИО заглушкой
+            // и продолжаем проверять остальные поля как обычно
+            if ($fio === '' || !preg_match('/^[А-Яа-яЁёA-Za-z\-\s\.\*]+$/u', $fio)) {
+                $fio = 'не указано';
+            }
         }
 
         // адрес: нас.пункт, улица, дом, [квартира]
@@ -77,7 +94,7 @@ class Parser
             $meterValueRaw = trim($meterFields[$i + 1]);
 
             // формат вида "3301660393 ХВС" или "3302248479 СХВ полив"
-            if ($meterName === '' || !preg_match('/^\d+\s+[А-Яа-яЁё\s]+$/u', $meterName)) {
+            if ($meterName === '' || !preg_match('/^\d+\s*[А-Яа-яЁё0-9\-\s]+$/u', $meterName)) {
                 return ['ok' => false, 'error' => "некорректный прибор учёта: '$meterName'", 'error_type' => 'meter'];
             }
             if (!preg_match('/^\d+(\.\d+)?$/', $meterValueRaw)) {
