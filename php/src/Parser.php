@@ -59,8 +59,8 @@ class Parser
 
         // адрес: нас.пункт, улица, дом, [квартира]
         $addressParts = array_map('trim', explode(',', $addressRaw));
-        if (count($addressParts) < 3) {
-            return ['ok' => false, 'error' => "некорректный адрес, меньше 3 частей: '$addressRaw'", 'error_type' => 'address'];
+        if (count($addressParts) < 2) {
+            return ['ok' => false, 'error' => "некорректный адрес, меньше 2 частей: '$addressRaw'", 'error_type' => 'address'];
         }
 
         [$settlement, $street, $house] = array_slice($addressParts, 0, 3);
@@ -69,7 +69,7 @@ class Parser
         }
 
         // всё что после дома - считаем квартирой, может отсутствовать
-        $apartment = count($addressParts) > 3 ? implode(', ', array_slice($addressParts, 3)) : null;
+        $apartment = count($addressParts) > 2 ? implode(', ', array_slice($addressParts, 2)) : null;
 
         // период начисления - только цифры
         $period = trim($period);
