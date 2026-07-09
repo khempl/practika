@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,941 +9,1131 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            background-color: #f8f9fc;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        body { background: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; padding: 20px; }
+        .container-wide { max-width: 1200px; margin: 0 auto; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+        .header-bar h1 { font-size: 24px; font-weight: 700; color: #0f172a; margin: 0; }
+        .header-bar .badge-total { background: #e2e8f0; color: #475569; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+        .main-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
+        .main-card .card-header { background: #0f172a; color: white; padding: 16px 24px; border-bottom: none; }
+        .main-card .card-body { padding: 24px; }
+        .drop-zone { border: 2px dashed #e2e8f0; border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfc; }
+        .drop-zone:hover { border-color: #2563eb; background: #f0f7ff; }
+        .drop-zone.dragover { border-color: #2563eb; background: #e8f0fe; }
+        .drop-zone i { font-size: 48px; color: #94a3b8; display: block; margin-bottom: 12px; }
+        .drop-zone .file-name { font-weight: 600; color: #0f172a; background: #eef2ff; padding: 4px 16px; border-radius: 50px; display: inline-block; font-size: 14px; }
+        .drop-zone.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+        .file-info { background: #f1f5f9; border-radius: 8px; padding: 12px 16px; display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .file-info.active { display: flex; }
+        .file-info .file-details { display: flex; align-items: center; gap: 10px; }
+        .file-info .file-size { color: #64748b; font-size: 13px; }
+        .stat-card { background: white; border-radius: 8px; padding: 16px; text-align: center; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.15s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card .stat-icon { font-size: 20px; margin-bottom: 4px; }
+        .stat-card .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; font-weight: 600; }
+        .stat-card .stat-value { font-size: 24px; font-weight: 700; line-height: 1.2; }
+        .stat-card.border-success { border-left: 3px solid #22c55e; }
+        .stat-card.border-danger { border-left: 3px solid #ef4444; }
+        .stat-card.border-info { border-left: 3px solid #3b82f6; }
+        .progress-custom { height: 20px; border-radius: 50px; background-color: #e9ecef; overflow: hidden; }
+        .progress-custom .progress-bar { border-radius: 50px; font-weight: 600; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: width 0.5s ease; }
+        .log-container { max-height: 380px; overflow-y: auto; background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.6; }
+        .log-container::-webkit-scrollbar { width: 6px; }
+        .log-container::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+        .log-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        .log-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .log-line { padding: 2px 0; border-bottom: 1px solid rgba(51,65,85,0.3); white-space: pre-wrap; word-break: break-all; }
+        .log-line .log-time { color: #64748b; margin-right: 10px; user-select: none; }
+        .log-line.log-success { color: #34d399; }
+        .log-line.log-error { color: #f87171; }
+        .log-line.log-info { color: #93c5fd; }
+        .log-empty { color: #64748b; text-align: center; padding: 20px 0; }
+        .error-group-badge { background: #fef2f2; color: #991b1b; border-radius: 50px; padding: 4px 14px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+        .error-group-badge .badge-count { background: #dc2626; color: white; border-radius: 50px; min-width: 20px; height: 20px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; line-height: 1; white-space: nowrap; }
+        .status-badge { padding: 4px 16px; border-radius: 50px; font-weight: 600; font-size: 13px; }
+        .status-badge.idle { background: #e2e8f0; color: #475569; }
+        .status-badge.processing { background: #fef9c3; color: #854d0e; }
+        .status-badge.completed { background: #dcfce7; color: #166534; }
+        .status-badge.error { background: #fee2e2; color: #991b1b; }
+        .btn-primary-gradient { background: #2563eb; border: none; padding: 8px 32px; font-weight: 600; color: #ffffff !important; border-radius: 8px; transition: background 0.2s; }
+        .btn-primary-gradient:hover { background: #1d4ed8; color: #ffffff !important; }
+        .btn-primary-gradient:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-done { background: #22c55e; border: none; padding: 8px 32px; font-weight: 600; color: #ffffff !important; border-radius: 8px; cursor: not-allowed; opacity: 0.7; }
+        .btn-outline-secondary { border: 1px solid #e2e8f0; background: white; color: #475569 !important; padding: 8px 20px; border-radius: 8px; font-weight: 500; transition: all 0.2s; }
+        .btn-outline-secondary:hover { background: #f1f5f9; color: #0f172a !important; border-color: #cbd5e1; }
+        .btn-outline-danger { border: 1px solid #fca5a5; background: white; color: #dc2626 !important; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .btn-outline-danger:hover { background: #fef2f2; color: #b91c1c !important; border-color: #f87171; }
+        .btn-outline-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-sm { padding: 4px 12px; font-size: 13px; }
+        .lock-notice { display: none; background: #fef9c3; border: 1px solid #facc15; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; color: #854d0e; font-size: 14px; }
+        .lock-notice.active { display: block; }
+        .lock-notice .lock-icon { margin-right: 8px; }
+        .history-section { margin-top: 16px; }
+        .history-section .history-title { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px; }
+        .history-table-wrap { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .history-table-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .history-table-wrap table th { background: #f8fafc; padding: 6px 12px; text-align: left; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; position: sticky; top: 0; background: #f8fafc; z-index: 1; }
+        .history-table-wrap table td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; }
+        .history-table-wrap table tr:nth-child(even) { background: #fafbfc; }
+        .history-table-wrap .empty-history { text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; }
+        .btn-container { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .btn-container .btn-spacer { flex: 1; }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header-bar h1 { font-size: 20px; }
+            .main-card .card-body { padding: 16px; }
+            .stat-card .stat-value { font-size: 20px; }
+            .drop-zone { padding: 24px 16px; }
+            .drop-zone i { font-size: 32px; }
+            .history-table-wrap { max-height: 150px; }
+            .history-table-wrap table { font-size: 12px; }
         }
-
-        .main-card {
-            border-radius: 1.25rem;
-            border: 0;
-            box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.06);
-            overflow: hidden;
-        }
-
-        .main-card .card-header {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: white;
-            border: 0;
-            padding: 1.25rem 2rem;
-        }
-
-        .drop-zone {
-            border: 2px dashed #cbd5e1;
-            border-radius: 1rem;
-            padding: 3rem 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: #fcfcfd;
-        }
-
-        .drop-zone:hover {
-            border-color: #0d6efd;
-            background-color: #f0f7ff;
-        }
-
-        .drop-zone.dragover {
-            border-color: #0d6efd;
-            background-color: #e8f0fe;
-            transform: scale(1.01);
-        }
-
-        .drop-zone i {
-            font-size: 3.5rem;
-            color: #94a3b8;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-
-        .drop-zone .file-name {
-            font-weight: 600;
-            color: #0f172a;
-            background: #eef2ff;
-            padding: 0.35rem 1.25rem;
-            border-radius: 50px;
-            display: inline-block;
-            font-size: 0.9rem;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 0.75rem;
-            padding: 1rem 1.25rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            transition: transform 0.2s;
-            height: 100%;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .stat-card .stat-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-card .stat-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #94a3b8;
-            font-weight: 600;
-        }
-
-        .stat-card .stat-value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        .log-container {
-            max-height: 380px;
-            overflow-y: auto;
-            background: #0f172a;
-            color: #e2e8f0;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 0.8rem;
-            line-height: 1.6;
-        }
-
-        .log-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .log-container::-webkit-scrollbar-track {
-            background: #1e293b;
-            border-radius: 4px;
-        }
-
-        .log-container::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
-
-        .log-container::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-
-        .log-line {
-            padding: 0.2rem 0;
-            border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .log-line .log-time {
-            color: #64748b;
-            margin-right: 0.75rem;
-            user-select: none;
-        }
-
-        .log-line.log-success {
-            color: #34d399;
-        }
-
-        .log-line.log-error {
-            color: #f87171;
-        }
-
-        .log-line.log-info {
-            color: #93c5fd;
-        }
-
-        .log-empty {
-            color: #64748b;
-            text-align: center;
-            padding: 2rem 0;
-        }
-
-        .progress-custom {
-            height: 1.25rem;
-            border-radius: 2rem;
-            background-color: #e9ecef;
-            overflow: hidden;
-        }
-
-        .progress-custom .progress-bar {
-            border-radius: 2rem;
-            font-weight: 600;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: width 0.5s ease;
-        }
-
-        .error-group-badge {
-            background: #fef2f2;
-            color: #991b1b;
-            border-radius: 50px;
-            padding: 0.3rem 0.9rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .error-group-badge .badge-count {
-            background: #dc2626;
-            color: white;
-            border-radius: 50px;
-            min-width: 20px;
-            height: 20px;
-            padding: 0 6px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
-            font-weight: 700;
-            line-height: 1;
-            box-sizing: border-box;
-            white-space: nowrap;
-        }
-
-        .btn-primary-gradient {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            border: 0;
-            padding: 0.6rem 2rem;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-primary-gradient:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.35);
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        }
-
-        .btn-primary-gradient:disabled {
-            opacity: 0.7;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .status-badge {
-            padding: 0.4rem 1rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.8rem;
-        }
-
-        .status-badge.idle {
-            background: #e2e8f0;
-            color: #475569;
-        }
-
-        .status-badge.processing {
-            background: #fef9c3;
-            color: #854d0e;
-        }
-
-        .status-badge.completed {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .status-badge.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .fade-in {
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .file-info {
-            background: #f1f5f9;
-            border-radius: 0.75rem;
-            padding: 0.75rem 1.25rem;
-            display: none;
-        }
-
-        .file-info.active {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-
-        .file-info .file-details {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .file-info .file-size {
-            color: #64748b;
-            font-size: 0.85rem;
+        @media (max-width: 576px) {
+            .drop-zone .file-name { font-size: 12px; }
+            .stat-card { padding: 12px; }
+            .stat-card .stat-value { font-size: 18px; }
+            .btn-container { flex-direction: column; align-items: stretch; }
+            .btn-container .btn-spacer { display: none; }
         }
     </style>
 </head>
-
 <body>
 
-    <div class="container py-4 py-md-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
+<div class="container-wide">
 
-                <!-- Шапка -->
-                <div class="text-center mb-4">
-                    <h1 class="fw-bold" style="color: #0f172a;">
-                        <i class="fas fa-file-import text-primary me-3"></i>Парсер ЖКХ
-                    </h1>
-                    <p class="text-muted">Загрузите файл с платежными документами. Система обработает 700 000+ строк.
-                    </p>
-                    <p class="small"><a href="list.php">Посмотреть записи в базе данных</a></p>
-                    <button onclick="clearDatabase()"
-                            style="background:#dc2626; color:#fff; border:none; margin: 10px; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px;">
-                            Очистить базу данных
-                    </button>
-                </div>
-
-                <!-- Основная карточка -->
-                <div class="card main-card">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <span class="fw-semibold"><i class="fas fa-upload me-2"></i>Загрузка и обработка</span>
-                            <span id="statusBadge" class="status-badge idle">
-                                <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> Ожидание
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="card-body p-4 p-md-5">
-
-                        <!-- 1. Зона загрузки -->
-                        <div id="dropZone" class="drop-zone">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p class="mb-1 fw-semibold" id="dropText">Перетащите файл сюда или кликните для выбора</p>
-                            <p class="text-muted small">Поддерживаются файлы формата .txt</p>
-                            <input type="file" id="fileInput" accept=".txt" class="d-none">
-                            <span class="file-name" id="fileNameDisplay" style="display:none;"></span>
-                        </div>
-
-                        <!-- Информация о файле -->
-                        <div id="fileInfo" class="file-info mt-3">
-                            <div class="file-details">
-                                <i class="fas fa-file-alt text-primary"></i>
-                                <span id="fileInfoName" class="fw-semibold">file.txt</span>
-                                <span class="file-size" id="fileInfoSize">0 KB</span>
-                            </div>
-                            <button class="btn btn-sm btn-outline-danger" id="removeFileBtn">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <!-- Прогресс -->
-                        <div id="progressArea" class="mt-4" style="display:none;">
-                            <div class="d-flex justify-content-between small mb-1">
-                                <span id="progressLabel"><i class="fas fa-spinner fa-spin me-2"
-                                        id="progressIcon"></i><span id="progressText">Обработка...</span></span>
-                                <span id="progressPercent" class="fw-bold">0%</span>
-                            </div>
-                            <div class="progress-custom">
-                                <div id="progressBar"
-                                    class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
-                                    role="progressbar" style="width: 0%;">
-                                    0%
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- 2. Статистика -->
-                        <div class="row g-3 mb-3">
-                            <div class="col-6 col-md-3">
-                                <div class="stat-card text-center">
-                                    <div class="stat-icon text-secondary"><i class="fas fa-list"></i></div>
-                                    <div class="stat-label">Всего строк</div>
-                                    <div class="stat-value" id="totalLines">0</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="stat-card text-center border-start border-success border-3">
-                                    <div class="stat-icon text-success"><i class="fas fa-check-circle"></i></div>
-                                    <div class="stat-label">Успешно</div>
-                                    <div class="stat-value text-success" id="successCount">0</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="stat-card text-center border-start border-danger border-3">
-                                    <div class="stat-icon text-danger"><i class="fas fa-exclamation-circle"></i></div>
-                                    <div class="stat-label">Ошибки</div>
-                                    <div class="stat-value text-danger" id="errorCount">0</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="stat-card text-center border-start border-info border-3">
-                                    <div class="stat-icon text-info"><i class="fas fa-clock"></i></div>
-                                    <div class="stat-label">Время</div>
-                                    <div class="stat-value" id="elapsedTime" style="font-size: 1.1rem;">00:00</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. Детали ошибок -->
-                        <div id="errorDetails" class="mt-3" style="display:none;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold mb-0">
-                                    <i class="fas fa-bug text-danger me-2"></i>Детализация ошибок
-                                </h6>
-                                <span id="errorGroupsCount" class="badge bg-light text-dark">0 типов</span>
-                            </div>
-                            <div id="errorGroupsContainer" class="d-flex flex-wrap gap-2 mb-2"></div>
-                            <button class="btn btn-outline-danger btn-sm" id="downloadErrorsBtn">
-                                <i class="fas fa-download me-2"></i>Скачать файл с ошибками
-                            </button>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- 4. Лог-консоль -->
-                        <div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold mb-0">
-                                    <i class="fas fa-terminal me-2"></i>Лог обработки
-                                    <span id="logCount" class="badge bg-secondary ms-2">0</span>
-                                </h6>
-                                <button class="btn btn-sm btn-outline-secondary" id="clearLogsBtn">
-                                    <i class="fas fa-eraser me-1"></i>Очистить лог
-                                </button>
-                            </div>
-                            <div class="log-container" id="logContainer">
-                                <div class="log-empty">
-                                    <i class="fas fa-circle-notch fa-spin me-2"></i> Ожидание действий...
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Кнопки управления -->
-                        <div class="mt-4 d-flex gap-3 flex-wrap">
-                            <button class="btn btn-primary-gradient px-5" id="startBtn">
-                                <i class="fas fa-play me-2"></i>Запустить парсинг
-                            </button>
-                            <button class="btn btn-outline-secondary" id="resetBtn">
-                                <i class="fas fa-undo me-2"></i>Сбросить парсинг
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- Подвал -->
-                <div class="text-center text-muted small mt-4">
-                    <i class="fas fa-database me-1"></i> Данные сохраняются в MongoDB. Ошибки логируются отдельно.
-                </div>
-
-            </div>
+    <div class="header-bar">
+        <div>
+            <h1><i class="fas fa-file-import text-primary me-2"></i>Парсер ЖКХ</h1>
+        </div>
+        <div>
+            <a href="list.php" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-database me-1"></i> Просмотр записей
+            </a>
+            <button onclick="clearDatabase()" class="btn btn-outline-danger btn-sm ms-2">
+                <i class="fas fa-trash me-1"></i> Очистить БД
+            </button>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="main-card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-semibold"><i class="fas fa-upload me-2"></i>Загрузка и обработка</span>
+                <span id="statusBadge" class="status-badge idle">
+                    <i class="fas fa-circle me-1" style="font-size: 8px;"></i> Ожидание
+                </span>
+            </div>
+        </div>
 
-    <!-- Полная логика -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        <div class="card-body">
 
-            // ----- DOM элементы -----
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-            const fileNameDisplay = document.getElementById('fileNameDisplay');
-            const dropText = document.getElementById('dropText');
-            const fileInfo = document.getElementById('fileInfo');
-            const fileInfoName = document.getElementById('fileInfoName');
-            const fileInfoSize = document.getElementById('fileInfoSize');
-            const removeFileBtn = document.getElementById('removeFileBtn');
+            <div class="lock-notice" id="lockNotice">
+                <i class="fas fa-lock lock-icon"></i>
+                <span id="lockNoticeText">Система занята другим пользователем</span>
+            </div>
 
-            const startBtn = document.getElementById('startBtn');
-            const resetBtn = document.getElementById('resetBtn');
-            const clearLogsBtn = document.getElementById('clearLogsBtn');
+            <div id="dropZone" class="drop-zone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p class="mb-1 fw-semibold" id="dropText">Перетащите файл сюда или кликните для выбора</p>
+                <p class="text-muted small">Поддерживаются файлы формата .txt</p>
+                <input type="file" id="fileInput" accept=".txt" class="d-none">
+                <span class="file-name" id="fileNameDisplay" style="display:none;"></span>
+            </div>
 
-            const progressArea = document.getElementById('progressArea');
-            const progressBar = document.getElementById('progressBar');
-            const progressPercent = document.getElementById('progressPercent');
+            <div id="fileInfo" class="file-info mt-3">
+                <div class="file-details">
+                    <i class="fas fa-file-alt text-primary"></i>
+                    <span id="fileInfoName" class="fw-semibold">file.txt</span>
+                    <span class="file-size" id="fileInfoSize">0 KB</span>
+                </div>
+                <button class="btn btn-sm btn-outline-danger" id="removeFileBtn">
+                    <i class="fas fa-times"></i> Удалить
+                </button>
+            </div>
 
-            const totalLines = document.getElementById('totalLines');
-            const successCount = document.getElementById('successCount');
-            const errorCount = document.getElementById('errorCount');
-            const elapsedTime = document.getElementById('elapsedTime');
+            <div id="progressArea" class="mt-4" style="display:none;">
+                <div class="d-flex justify-content-between small mb-1">
+                    <span id="progressLabel">
+                        <i class="fas fa-spinner fa-spin me-2" id="progressIcon"></i>
+                        <span id="progressText">Обработка...</span>
+                    </span>
+                    <span id="progressPercent" class="fw-bold">0%</span>
+                </div>
+                <div class="progress-custom">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;">0%</div>
+                </div>
+            </div>
 
-            const logContainer = document.getElementById('logContainer');
-            const logCount = document.getElementById('logCount');
+            <hr>
 
-            const statusBadge = document.getElementById('statusBadge');
-            const errorDetails = document.getElementById('errorDetails');
-            const errorGroupsContainer = document.getElementById('errorGroupsContainer');
-            const errorGroupsCount = document.getElementById('errorGroupsCount');
-            const downloadErrorsBtn = document.getElementById('downloadErrorsBtn');
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon text-secondary"><i class="fas fa-list"></i></div>
+                        <div class="stat-label">Всего строк</div>
+                        <div class="stat-value" id="totalLines">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card border-success">
+                        <div class="stat-icon text-success"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-label">Успешно</div>
+                        <div class="stat-value text-success" id="successCount">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card border-danger">
+                        <div class="stat-icon text-danger"><i class="fas fa-exclamation-circle"></i></div>
+                        <div class="stat-label">Ошибки</div>
+                        <div class="stat-value text-danger" id="errorCount">0</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card border-info">
+                        <div class="stat-icon text-info"><i class="fas fa-clock"></i></div>
+                        <div class="stat-label">Время</div>
+                        <div class="stat-value" id="elapsedTime" style="font-size: 18px;">00:00</div>
+                    </div>
+                </div>
+            </div>
 
-            let selectedFile = null;
-            let statusInterval = null;
-            let timerInterval = null;
-            let startTime = null;
-            let isProcessing = false;
-            let currentJobId = null;
-            let logCursor = 0;
+            <div id="errorDetails" class="mt-3" style="display:none;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fas fa-bug text-danger me-2"></i>Детализация ошибок
+                    </h6>
+                    <span id="errorGroupsCount" class="badge bg-light text-dark">0 типов</span>
+                </div>
+                <div id="errorGroupsContainer" class="d-flex flex-wrap gap-2 mb-2"></div>
+                <button class="btn btn-outline-danger btn-sm" id="downloadErrorsBtn" disabled>
+                    <i class="fas fa-download me-2"></i>Скачать файл с ошибками
+                </button>
+            </div>
 
-            // ----- Вспомогательные функции -----
+            <hr>
 
-            function formatFileSize(bytes) {
-                if (bytes < 1024) return bytes + ' B';
-                if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-                return (bytes / 1048576).toFixed(1) + ' MB';
-            }
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold mb-0">
+                        <i class="fas fa-terminal me-2"></i>Лог обработки
+                        <span id="logCount" class="badge bg-secondary ms-2">0</span>
+                    </h6>
+                    <button class="btn btn-sm btn-outline-secondary" id="clearLogsBtn">
+                        <i class="fas fa-eraser me-1"></i>Очистить
+                    </button>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <div class="log-empty">
+                        <i class="fas fa-circle-notch fa-spin me-2"></i> Ожидание действий...
+                    </div>
+                </div>
+            </div>
 
-            function formatTime(seconds) {
-                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
-                const s = String(Math.floor(seconds % 60)).padStart(2, '0');
-                return m + ':' + s;
-            }
+            <!-- Кнопки управления -->
+            <div class="mt-4 btn-container" id="buttonsContainer">
+                <button class="btn btn-primary-gradient" id="startBtn">
+                    <i class="fas fa-play me-2"></i>Запустить парсинг
+                </button>
+                <button class="btn-done" id="doneBtn" style="display:none;">
+                    <i class="fas fa-check me-2"></i>Готово
+                </button>
+                <span class="btn-spacer"></span>
+                <button class="btn btn-outline-secondary" id="resetBtn">
+                    <i class="fas fa-undo me-2"></i>Сбросить
+                </button>
+            </div>
 
-            function setStatus(type, text) {
-                statusBadge.className = 'status-badge ' + type;
-                statusBadge.innerHTML = '<i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i> ' + text;
-            }
+            <hr>
 
-            function updateLogCount() {
-                const items = logContainer.querySelectorAll('.log-line:not(.log-empty)');
-                logCount.textContent = items.length;
-            }
+            <div class="history-section" id="historySection">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="history-title">
+                        <i class="fas fa-history me-2"></i>История парсингов
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refreshHistoryBtn">
+                        <i class="fas fa-sync-alt me-1"></i>Обновить
+                    </button>
+                </div>
+                <div class="history-table-wrap" id="historyTableWrap">
+                    <div class="empty-history">
+                        <i class="fas fa-spinner fa-spin me-2"></i> Загрузка истории...
+                    </div>
+                </div>
+            </div>
 
-            function addLog(message, type = 'info') {
-                // Удаляем пустое сообщение
-                const empty = logContainer.querySelector('.log-empty');
-                if (empty) empty.remove();
+        </div>
+    </div>
 
-                const div = document.createElement('div');
-                div.className = 'log-line log-' + type;
-                const time = new Date().toLocaleTimeString();
-                div.innerHTML = '<span class="log-time">[' + time + ']</span>' + message;
-                logContainer.prepend(div);
+    <div class="text-center text-muted small mt-4">
+        <i class="fas fa-database me-1"></i> Данные сохраняются в MongoDB. Ошибки логируются отдельно.
+    </div>
 
-                // Ограничиваем количество
-                while (logContainer.children.length > 200) {
-                    logContainer.removeChild(logContainer.lastChild);
-                }
+</div>
 
-                updateLogCount();
-            }
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
-            function clearLogs() {
-                logContainer.innerHTML = '<div class="log-empty"><i class="fas fa-circle-notch fa-spin me-2"></i> Ожидание действий...</div>';
-                updateLogCount();
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
 
-            function updateStats(data) {
-                totalLines.textContent = data.total || 0;
-                successCount.textContent = data.success || 0;
-                errorCount.textContent = data.errors || 0;
+    // ============================================================
+    // 1. СОСТОЯНИЕ (localStorage)
+    // ============================================================
+    const STATE_KEY = 'parser_state';
 
-                // Обновляем прогресс
-                const progress = data.progress || 0;
-                progressBar.style.width = progress + '%';
-                progressBar.textContent = progress + '%';
-                progressPercent.textContent = progress + '%';
+    function saveState(state) {
+        try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
 
-                // Обновляем статус
-                if (data.status === 'completed') {
-                    setStatus('completed', '✅ Завершено');
-                    progressBar.classList.remove('progress-bar-animated');
-                } else if (data.status === 'error') {
-                    setStatus('error', '❌ Ошибка');
-                    progressBar.classList.remove('progress-bar-animated');
-                } else if (data.status === 'processing') {
-                    setStatus('processing', '⏳ Обработка...');
-                }
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STATE_KEY);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return null;
+    }
 
-                // Обновляем ошибки
-                if (data.error_groups && data.error_groups.length > 0) {
-                    errorDetails.style.display = 'block';
-                    errorGroupsContainer.innerHTML = '';
-                    data.error_groups.forEach(group => {
-                        const badge = document.createElement('span');
-                        badge.className = 'error-group-badge';
-                        badge.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' +
-                            group.field + ' <span class="badge-count">' + group.count + '</span>';
-                        errorGroupsContainer.appendChild(badge);
-                    });
-                    errorGroupsCount.textContent = data.error_groups.length + ' типов';
-                } else {
-                    errorDetails.style.display = 'none';
-                }
+    function clearState() {
+        try { localStorage.removeItem(STATE_KEY); } catch (e) {}
+    }
 
-                // Добавляем новые логи (сервер отдаёт только те, что мы ещё не видели, см. logCursor)
-                if (data.logs && data.logs.length) {
-                    data.logs.forEach(log => {
-                        addLog(log.message, log.type || 'info');
-                    });
-                }
-                if (typeof data.logs_total === 'number') {
-                    logCursor = data.logs_total;
-                }
-            }
+    // ============================================================
+    // 2. ГЛОБАЛЬНАЯ БЛОКИРОВКА
+    // ============================================================
+    let sessionId = localStorage.getItem('parser_session_id');
+    if (!sessionId) {
+        sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+        localStorage.setItem('parser_session_id', sessionId);
+    }
 
-            function resetAll() {
-                if (statusInterval) clearInterval(statusInterval);
-                if (timerInterval) clearInterval(timerInterval);
-                isProcessing = false;
-                logCursor = 0;
+    const lockNotice = document.getElementById('lockNotice');
+    const lockNoticeText = document.getElementById('lockNoticeText');
 
-                totalLines.textContent = '0';
-                successCount.textContent = '0';
-                errorCount.textContent = '0';
-                elapsedTime.textContent = '00:00';
-                progressBar.style.width = '0%';
-                progressBar.textContent = '0%';
-                progressPercent.textContent = '0%';
-                progressArea.style.display = 'none';
-                errorDetails.style.display = 'none';
-                setStatus('idle', 'Ожидание');
+    function showLockNotice(message) {
+        lockNoticeText.textContent = message || 'Система занята другим пользователем';
+        lockNotice.classList.add('active');
+    }
 
-                startBtn.disabled = false;
-                startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
-                startBtn.className = 'btn btn-primary-gradient px-5';
-                startBtn.dataset.mode = 'start';
+    function hideLockNotice() {
+        lockNotice.classList.remove('active');
+    }
 
-                resetDownloadButton();
-
-                // Не очищаем логи и не удаляем файл
-            }
-
-            // ----- Обработка файла -----
-
-            function handleFile(file) {
-                if (!file) return;
-                selectedFile = file;
-                fileNameDisplay.textContent = ' ' + file.name;
-                fileNameDisplay.style.display = 'inline-block';
-                dropText.textContent = 'Файл готов к загрузке';
-
-                fileInfoName.textContent = file.name;
-                fileInfoSize.textContent = formatFileSize(file.size);
-                fileInfo.classList.add('active');
-
-                addLog('Выбран файл: ' + file.name + ' (' + formatFileSize(file.size) + ')', 'success');
-            }
-
-            function removeFile() {
-                selectedFile = null;
-                fileInput.value = '';
-                fileNameDisplay.style.display = 'none';
-                dropText.textContent = 'Перетащите файл сюда или кликните для выбора';
-                fileInfo.classList.remove('active');
-                addLog('Файл удалён', 'info');
-            }
-
-            // ----- Drag & Drop -----
-
-            dropZone.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                this.classList.add('dragover');
-            });
-
-            dropZone.addEventListener('dragleave', function (e) {
-                e.preventDefault();
-                this.classList.remove('dragover');
-            });
-
-            dropZone.addEventListener('drop', function (e) {
-                e.preventDefault();
-                this.classList.remove('dragover');
-                const files = e.dataTransfer.files;
-                if (files.length > 0 && files[0].type === 'text/plain') {
-                    handleFile(files[0]);
-                } else {
-                    addLog('Пожалуйста, загрузите файл формата .txt', 'error');
-                }
-            });
-
-            dropZone.addEventListener('click', function () {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', function () {
-                if (this.files.length > 0) {
-                    handleFile(this.files[0]);
-                }
-            });
-
-            removeFileBtn.addEventListener('click', removeFile);
-
-            // ----- Запуск парсинга -----
-
-            startBtn.addEventListener('click', function () {
-                if (!selectedFile) {
-                    addLog('Сначала выберите файл!', 'error');
-                    return;
-                }
-
-                if (startBtn.dataset.mode === 'done') {
-                    resetAll();
-                    removeFile();
-                    clearLogs();
-                    return;
-                }
-
-                if (isProcessing) return;
-
-                // Отправляем файл на сервер
-                const formData = new FormData();
-                formData.append('file', selectedFile);
-
-                addLog('Отправка файла на сервер...', 'info');
-                startBtn.disabled = true;
-                startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
-                logCursor = 0;
-
-                let uploadProgressLogEl = null;
-
-                function updateUploadProgressLog(message) {
-                    if (!uploadProgressLogEl) {
-                        // создаём строку в логе один раз при первом вызове
-                        uploadProgressLogEl = document.createElement('div');
-                        logContainer.appendChild(uploadProgressLogEl);
-                    }
-                    uploadProgressLogEl.textContent = message;
-                }
-
-                const xhr = new XMLHttpRequest();
-                let lastLoggedPercent = -1;
-
-                // прогресс отправки файла на сервер - обновляем одну и ту же строку в логе,
-                // а не плодим новую при каждом срабатывании события
-                xhr.upload.addEventListener('progress', (event) => {
-                    if (event.lengthComputable) {
-                        const loadedMb = (event.loaded / 1024 / 1024).toFixed(1);
-                        const totalMb = (event.total / 1024 / 1024).toFixed(1);
-                        const percent = Math.round((event.loaded / event.total) * 100);
-
-                        if (percent !== lastLoggedPercent) {
-                            updateUploadProgressLog(`📤 Отправка файла: ${loadedMb} МБ из ${totalMb} МБ (${percent}%)`);
-                            lastLoggedPercent = percent;
-                        }
-                    }
-                });
-
-                xhr.addEventListener('load', () => {
-                    let data;
-                    try {
-                        data = JSON.parse(xhr.responseText);
-                    } catch (e) {
-                        addLog('Сервер вернул некорректный ответ', 'error');
-                        startBtn.disabled = false;
-                        startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
-                        return;
-                    }
-
-                    if (data.success) {
-                        addLog('Файл загружен, ID: ' + data.file_id, 'success');
-                        startParsing(data.file_id);
+    function checkGlobalLock() {
+        return fetch('api/lock.php')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.locked) {
+                    const user = data.user || 'Неизвестный пользователь';
+                    const file = data.file_name || 'неизвестный файл';
+                    const isOwn = data.session_id === sessionId;
+                    if (!isOwn) {
+                        showLockNotice('Система занята пользователем: ' + user + ' (файл: ' + file + ')');
+                        dropZone.classList.add('disabled');
+                        startBtn.style.display = 'inline-block';
+                        startBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Система занята';
+                        startBtn.className = 'btn btn-primary-gradient';
+                        startBtn.disabled = true;
+                        return true;
                     } else {
-                        addLog('Ошибка загрузки: ' + (data.message || 'неизвестная ошибка'), 'error');
-                        startBtn.disabled = false;
-                        startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+                        hideLockNotice();
+                        return false;
                     }
-                });
-
-                xhr.addEventListener('error', () => {
-                    addLog('Ошибка соединения при загрузке файла', 'error');
-                    startBtn.disabled = false;
-                    startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
-                });
-
-                xhr.open('POST', 'api/upload.php');
-                xhr.send(formData);
-            });
-
-            function startParsing(fileId) {
-                isProcessing = true;
-                progressArea.style.display = 'block';
-                setStatus('processing', '⏳ Обработка...');
-                startTime = Date.now();
-
-                const progressIcon = document.getElementById('progressIcon');
-                const progressText = document.getElementById('progressText');
-                const progressBar = document.getElementById('progressBar');
-                const progressPercent = document.getElementById('progressPercent');
-
-                progressIcon.className = 'fas fa-spinner fa-spin me-2';
-                progressText.textContent = 'Обработка...';
-                progressBar.classList.remove('bg-success', 'bg-danger');
-                progressBar.classList.add('bg-primary', 'progress-bar-animated');
-                progressBar.style.width = '0%';
-                progressBar.textContent = '0%';
-                progressPercent.textContent = '0%';
-
-                timerInterval = setInterval(function () {
-                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                    elapsedTime.textContent = formatTime(elapsed);
-                }, 1000);
-
-                startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Обработка...';
-                startBtn.disabled = true;
-
-                fetch('api/parse.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ file_id: fileId })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            currentJobId = data.job_id;
-                            resetDownloadButton();
-                            addLog('🚀 Парсинг запущен, Job ID: ' + data.job_id, 'success');
-                            if (statusInterval) clearInterval(statusInterval);
-                            statusInterval = setInterval(fetchStatus, 1500);
-                        } else {
-                            addLog('Ошибка запуска парсинга: ' + (data.message || 'неизвестная ошибка'), 'error');
-                            isProcessing = false;
-                            startBtn.disabled = false;
-                            startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
-                            if (timerInterval) clearInterval(timerInterval);
-                            setStatus('error', 'Ошибка');
-                        }
-                    })
-                    .catch(err => {
-                        addLog('Ошибка соединения: ' + err.message, 'error');
-                        isProcessing = false;
-                        startBtn.disabled = false;
-                        startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
-                        if (timerInterval) clearInterval(timerInterval);
-                    });
-            }
-
-            // ----- Получение статуса -----
-
-            function fetchStatus() {
-                if (!currentJobId) return;
-
-                fetch('api/status.php?job_id=' + currentJobId + '&since=' + logCursor)
-                    .then(res => res.json())
-                    .then(data => {
-                        updateStats(data);
-
-                        if (data.status === 'completed' || data.status === 'error') {
-                            clearInterval(statusInterval);
-                            if (timerInterval) clearInterval(timerInterval);
-
-                            isProcessing = false;
-                            startBtn.disabled = false;
-                            startBtn.innerHTML = '<i class="fas fa-check me-2"></i>Готово';
-                            startBtn.className = 'btn btn-success px-5';
-                            startBtn.dataset.mode = 'done';
-                            const progressIcon = document.getElementById('progressIcon');
-                            const progressText = document.getElementById('progressText');
-                            const progressBar = document.getElementById('progressBar');
-
-                            if (data.status === 'completed') {
-                                progressIcon.className = 'fas fa-check-circle me-2 text-success';
-                                progressText.textContent = 'Завершено';
-                                progressBar.classList.remove('progress-bar-animated', 'bg-primary');
-                                progressBar.classList.add('bg-success');
-                                addLog('🏁 Обработка завершена успешно!', 'success');
-                            } else {
-                                progressIcon.className = 'fas fa-times-circle me-2 text-danger';
-                                progressText.textContent = 'Завершено с ошибками';
-                                progressBar.classList.remove('progress-bar-animated', 'bg-primary');
-                                progressBar.classList.add('bg-danger');
-                                addLog('Обработка завершена с ошибками', 'error');
-                            }
-
-                            // Останавливаем таймер
-                            const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                            elapsedTime.textContent = formatTime(elapsed);
-                        }
-                    })
-                    .catch(err => {
-                        // Не показываем ошибку каждые 1.5 секунды, только если это не первая попытка
-                        if (statusInterval) {
-                            // Игнорируем, просто не обновляем
-                        }
-                    });
-            }
-
-            // ----- Сброс -----
-
-            resetBtn.addEventListener('click', function () {
-                if (isProcessing) {
-                    if (!confirm('Обработка ещё идёт. Вы уверены, что хотите сбросить?')) return;
                 }
-                resetAll();
-                addLog('Сброс выполнен', 'info');
+                hideLockNotice();
+                return false;
+            })
+            .catch(function() { hideLockNotice(); return false; });
+    }
+
+    function createGlobalLock(fileName, jobId) {
+        return fetch('api/lock.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user: 'Пользователь',
+                file_name: fileName,
+                job_id: jobId,
+                session_id: sessionId
+            })
+        }).then(function(res) { return res.json(); });
+    }
+
+    function releaseGlobalLock() {
+        return fetch('api/lock.php', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId })
+        }).then(function(res) { return res.json(); });
+    }
+
+    // ============================================================
+    // 3. DOM ЭЛЕМЕНТЫ
+    // ============================================================
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const dropText = document.getElementById('dropText');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileInfoName = document.getElementById('fileInfoName');
+    const fileInfoSize = document.getElementById('fileInfoSize');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+
+    const startBtn = document.getElementById('startBtn');
+    const doneBtn = document.getElementById('doneBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearLogsBtn = document.getElementById('clearLogsBtn');
+    const refreshHistoryBtn = document.getElementById('refreshHistoryBtn');
+
+    const progressArea = document.getElementById('progressArea');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const progressIcon = document.getElementById('progressIcon');
+    const progressText = document.getElementById('progressText');
+
+    const totalLines = document.getElementById('totalLines');
+    const successCount = document.getElementById('successCount');
+    const errorCount = document.getElementById('errorCount');
+    const elapsedTime = document.getElementById('elapsedTime');
+
+    const logContainer = document.getElementById('logContainer');
+    const logCount = document.getElementById('logCount');
+
+    const statusBadge = document.getElementById('statusBadge');
+    const errorDetails = document.getElementById('errorDetails');
+    const errorGroupsContainer = document.getElementById('errorGroupsContainer');
+    const errorGroupsCount = document.getElementById('errorGroupsCount');
+    const downloadErrorsBtn = document.getElementById('downloadErrorsBtn');
+    const historyTableWrap = document.getElementById('historyTableWrap');
+
+    // ============================================================
+    // 4. ПЕРЕМЕННЫЕ
+    // ============================================================
+    let selectedFile = null;
+    let statusInterval = null;
+    let timerInterval = null;
+    let historyInterval = null;
+    let startTime = null;
+    let isProcessing = false;
+    let isCompleted = false;
+    let currentJobId = null;
+    let logCursor = 0;
+    let isLocked = false;
+    let hasErrorsFile = false;
+
+    // ============================================================
+    // 5. УПРАВЛЕНИЕ КНОПКАМИ
+    // ============================================================
+    function setButtonIdle() {
+        startBtn.style.display = 'inline-block';
+        doneBtn.style.display = 'none';
+        startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+        startBtn.className = 'btn btn-primary-gradient';
+        startBtn.disabled = false;
+    }
+
+    function setButtonProcessing() {
+        startBtn.style.display = 'none';
+        doneBtn.style.display = 'none';
+        dropZone.classList.add('disabled');
+    }
+
+    function setButtonDone() {
+        startBtn.style.display = 'none';
+        doneBtn.style.display = 'inline-block';
+        dropZone.classList.remove('disabled');
+    }
+
+    function setButtonLocked() {
+        startBtn.style.display = 'inline-block';
+        doneBtn.style.display = 'none';
+        startBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Система занята';
+        startBtn.className = 'btn btn-primary-gradient';
+        startBtn.disabled = true;
+        dropZone.classList.add('disabled');
+    }
+
+    // ============================================================
+    // 6. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================================
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function formatTime(seconds) {
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(Math.floor(seconds % 60)).padStart(2, '0');
+        return m + ':' + s;
+    }
+
+    function setStatus(type, text) {
+        statusBadge.className = 'status-badge ' + type;
+        statusBadge.innerHTML = '<i class="fas fa-circle me-1" style="font-size: 8px;"></i> ' + text;
+    }
+
+    function updateLogCount() {
+        const items = logContainer.querySelectorAll('.log-line:not(.log-empty)');
+        logCount.textContent = items.length;
+    }
+
+    function addLog(message, type) {
+        type = type || 'info';
+        const empty = logContainer.querySelector('.log-empty');
+        if (empty) empty.remove();
+        const div = document.createElement('div');
+        div.className = 'log-line log-' + type;
+        const time = new Date().toLocaleTimeString();
+        div.innerHTML = '<span class="log-time">[' + time + ']</span>' + message;
+        logContainer.prepend(div);
+        while (logContainer.children.length > 200) {
+            logContainer.removeChild(logContainer.lastChild);
+        }
+        updateLogCount();
+    }
+
+    function clearLogs() {
+        logContainer.innerHTML = '<div class="log-empty"><i class="fas fa-circle-notch fa-spin me-2"></i> Ожидание действий...</div>';
+        updateLogCount();
+    }
+
+    function showErrorGroups(groups) {
+        if (groups && groups.length > 0) {
+            errorDetails.style.display = 'block';
+            errorGroupsContainer.innerHTML = '';
+            groups.forEach(function(group) {
+                const badge = document.createElement('span');
+                badge.className = 'error-group-badge';
+                badge.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' +
+                    group.field + ' <span class="badge-count">' + group.count + '</span>';
+                errorGroupsContainer.appendChild(badge);
             });
+            errorGroupsCount.textContent = groups.length + ' типов';
+            hasErrorsFile = true;
+        } else {
+            errorDetails.style.display = 'none';
+            hasErrorsFile = false;
+        }
+    }
 
-            // ----- Очистка логов -----
-
-            clearLogsBtn.addEventListener('click', function () {
-                clearLogs();
-                addLog('Лог очищен', 'info');
-            });
-
-            // ----- Скачивание ошибок -----
-
-            downloadErrorsBtn.addEventListener('click', function () {
-                if (this.disabled) return;
-                if (currentJobId) {
-                    window.location.href = 'api/download-errors.php?job_id=' + currentJobId;
-                } else {
-                    addLog('Нет данных об ошибках для скачивания', 'error');
-                }
-                this.disabled = true;
-                this.innerHTML = '<i class="fas fa-check me-2"></i>Скачано';
-            });
-
-            // ----- Инициализация -----
-
-            clearLogs();
-            setStatus('idle', 'Ожидание');
-
-            addLog('Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
-
-        });
-
-        function clearDatabase() {
-            if (!confirm('Точно удалить ВСЕ записи из базы?')) {
-                return;
-            }
-
-            fetch('api/clear.php', { method: 'POST' })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Удалено записей: ' + data.deleted_count);
-                        location.reload();
-                    } else {
-                        alert('Ошибка: ' + data.message);
-                    }
-                })
-                .catch(err => alert('Ошибка соединения: ' + err.message));
-        };
-
-        function resetDownloadButton() {
+    function enableDownloadButton() {
+        if (hasErrorsFile && currentJobId) {
             downloadErrorsBtn.disabled = false;
             downloadErrorsBtn.innerHTML = '<i class="fas fa-download me-2"></i>Скачать файл с ошибками';
             downloadErrorsBtn.className = 'btn btn-outline-danger btn-sm';
-        };
-    </script>
+        } else {
+            downloadErrorsBtn.disabled = true;
+            downloadErrorsBtn.innerHTML = '<i class="fas fa-times me-2"></i>Ошибок нет';
+            downloadErrorsBtn.className = 'btn btn-outline-secondary btn-sm';
+        }
+    }
+
+    function disableDownloadButton(message) {
+        downloadErrorsBtn.disabled = true;
+        downloadErrorsBtn.innerHTML = message || '<i class="fas fa-spinner fa-spin me-2"></i>Дождитесь завершения';
+        downloadErrorsBtn.className = 'btn btn-outline-danger btn-sm';
+    }
+
+    // ============================================================
+    // 7. ИСТОРИЯ
+    // ============================================================
+    function loadHistory() {
+        fetch('api/history.php')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (!data || data.length === 0) {
+                    historyTableWrap.innerHTML = '<div class="empty-history"><i class="fas fa-inbox me-2"></i> История парсингов пуста</div>';
+                    return;
+                }
+                var html = '<table><thead><tr><th>Дата</th><th>Файл</th><th>Всего</th><th>Успешно</th><th>Ошибки</th><th>Время</th></tr></thead><tbody>';
+                data.forEach(function(r) {
+                    var date = r.created_at ? new Date(r.created_at * 1000).toLocaleString() : '—';
+                    var duration = r.duration_seconds ? formatTime(r.duration_seconds) : '—';
+                    html += '<tr><td>' + date + '</td><td>' + (r.file_name || '—') + '</td><td>' + (r.total || 0) + '</td><td style="color:#22c55e;">' + (r.success || 0) + '</td><td style="color:#ef4444;">' + (r.errors || 0) + '</td><td>' + duration + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                historyTableWrap.innerHTML = html;
+            })
+            .catch(function() {
+                historyTableWrap.innerHTML = '<div class="empty-history"><i class="fas fa-exclamation-circle me-2"></i> Ошибка загрузки истории</div>';
+            });
+    }
+
+    // ============================================================
+    // 8. ОБНОВЛЕНИЕ СТАТИСТИКИ И СОХРАНЕНИЕ СОСТОЯНИЯ
+    // ============================================================
+    function updateStats(data) {
+        totalLines.textContent = data.total || 0;
+        successCount.textContent = data.success || 0;
+        errorCount.textContent = data.errors || 0;
+
+        var progress = data.progress || 0;
+        progressBar.style.width = progress + '%';
+        progressBar.textContent = progress + '%';
+        progressPercent.textContent = progress + '%';
+
+        if (data.status === 'completed') {
+            setStatus('completed', 'Завершено');
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-success');
+            progressIcon.className = 'fas fa-check-circle me-2 text-success';
+            progressText.textContent = 'Завершено';
+            setButtonDone();
+            hideLockNotice();
+            isCompleted = true;
+            isProcessing = false;
+            if (data.error_groups && data.error_groups.length > 0) {
+                showErrorGroups(data.error_groups);
+            } else {
+                hasErrorsFile = false;
+                errorDetails.style.display = 'none';
+            }
+            enableDownloadButton();
+            loadHistory();
+
+        } else if (data.status === 'error') {
+            setStatus('error', 'Ошибка');
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-danger');
+            progressIcon.className = 'fas fa-times-circle me-2 text-danger';
+            progressText.textContent = 'Завершено с ошибками';
+            setButtonDone();
+            hideLockNotice();
+            isCompleted = true;
+            isProcessing = false;
+            if (data.error_groups && data.error_groups.length > 0) {
+                showErrorGroups(data.error_groups);
+            } else {
+                hasErrorsFile = false;
+                errorDetails.style.display = 'none';
+            }
+            enableDownloadButton();
+            loadHistory();
+
+        } else if (data.status === 'processing') {
+            setStatus('processing', 'Обработка...');
+            progressBar.classList.remove('bg-success', 'bg-danger');
+            progressBar.classList.add('bg-primary', 'progress-bar-animated');
+            progressIcon.className = 'fas fa-spinner fa-spin me-2';
+            progressText.textContent = 'Обработка...';
+            isCompleted = false;
+            isProcessing = true;
+            setButtonProcessing();
+            disableDownloadButton();
+        }
+
+        if (data.error_groups && data.error_groups.length > 0 && data.status !== 'completed' && data.status !== 'error') {
+            showErrorGroups(data.error_groups);
+        }
+
+        if (data.logs && data.logs.length) {
+            data.logs.forEach(function(log) {
+                addLog(log.message, log.type || 'info');
+            });
+        }
+        if (typeof data.logs_total === 'number') {
+            logCursor = data.logs_total;
+        }
+
+        // ============================================================
+        // ★★★ СОХРАНЯЕМ СОСТОЯНИЕ В localStorage ★★★
+        // ============================================================
+        var isDone = data.status === 'completed' || data.status === 'error';
+        var hasErrors = (data.error_groups && data.error_groups.length > 0);
+        saveState({
+            isProcessing: data.status === 'processing',
+            completed: isDone,
+            jobId: currentJobId,
+            logCursor: logCursor,
+            startTime: startTime,
+            progress: data.progress || 0,
+            stats: {
+                total: data.total || 0,
+                success: data.success || 0,
+                errors: data.errors || 0
+            },
+            error_groups: data.error_groups || [],
+            has_errors: hasErrors,
+            logs: Array.from(logContainer.querySelectorAll('.log-line')).map(function(el) {
+                var text = el.textContent || '';
+                var type = el.className.includes('log-success') ? 'success' :
+                           el.className.includes('log-error') ? 'error' : 'info';
+                return { message: text.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, ''), type: type };
+            }).slice(0, 50),
+            lockNotice: lockNotice.classList.contains('active'),
+            lockNoticeText: lockNoticeText.textContent,
+            timestamp: Date.now()
+        });
+    }
+
+    // ============================================================
+    // 9. ОБРАБОТКА ФАЙЛА
+    // ============================================================
+    function handleFile(file) {
+        if (!file) return;
+        if (isLocked) {
+            addLog('Идёт обработка, загрузка нового файла невозможна', 'error');
+            return;
+        }
+        selectedFile = file;
+        fileNameDisplay.textContent = ' ' + file.name;
+        fileNameDisplay.style.display = 'inline-block';
+        dropText.textContent = 'Файл готов к загрузке';
+        fileInfoName.textContent = file.name;
+        fileInfoSize.textContent = formatFileSize(file.size);
+        fileInfo.classList.add('active');
+        addLog('Выбран файл: ' + file.name + ' (' + formatFileSize(file.size) + ')', 'success');
+    }
+
+    function removeFile() {
+        if (isLocked) return;
+        selectedFile = null;
+        fileInput.value = '';
+        fileNameDisplay.style.display = 'none';
+        dropText.textContent = 'Перетащите файл сюда или кликните для выбора';
+        fileInfo.classList.remove('active');
+        addLog('Файл удалён', 'info');
+    }
+
+    // ============================================================
+    // 10. DRAG & DROP
+    // ============================================================
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (isLocked) {
+            addLog('Идёт обработка, загрузка нового файла невозможна', 'error');
+            return;
+        }
+        var files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].type === 'text/plain') {
+            handleFile(files[0]);
+        } else {
+            addLog('Пожалуйста, загрузите файл формата .txt', 'error');
+        }
+    });
+    dropZone.addEventListener('click', function() {
+        if (isLocked) {
+            addLog('Идёт обработка, загрузка нового файла невозможна', 'error');
+            return;
+        }
+        fileInput.click();
+    });
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            handleFile(this.files[0]);
+        }
+    });
+    removeFileBtn.addEventListener('click', removeFile);
+
+    // ============================================================
+    // 11. ЗАПУСК ПАРСИНГА
+    // ============================================================
+    startBtn.addEventListener('click', function() {
+        if (!selectedFile) {
+            addLog('Сначала выберите файл!', 'error');
+            return;
+        }
+        if (isProcessing || isLocked) return;
+
+        isLocked = true;
+        dropZone.classList.add('disabled');
+        disableDownloadButton();
+
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
+        startBtn.disabled = true;
+
+        var formData = new FormData();
+        formData.append('file', selectedFile);
+
+        addLog('Отправка файла на сервер...', 'info');
+        logCursor = 0;
+
+        var xhr = new XMLHttpRequest();
+        var lastLoggedPercent = -1;
+        var uploadProgressLogEl = null;
+
+        function updateUploadProgressLog(message) {
+            if (!uploadProgressLogEl) {
+                uploadProgressLogEl = document.createElement('div');
+                logContainer.appendChild(uploadProgressLogEl);
+            }
+            uploadProgressLogEl.textContent = message;
+        }
+
+        xhr.upload.addEventListener('progress', function(event) {
+            if (event.lengthComputable) {
+                var loadedMb = (event.loaded / 1024 / 1024).toFixed(1);
+                var totalMb = (event.total / 1024 / 1024).toFixed(1);
+                var percent = Math.round((event.loaded / event.total) * 100);
+                if (percent !== lastLoggedPercent) {
+                    updateUploadProgressLog('Отправка файла: ' + loadedMb + ' МБ из ' + totalMb + ' МБ (' + percent + '%)');
+                    lastLoggedPercent = percent;
+                }
+            }
+        });
+
+        xhr.addEventListener('load', function() {
+            var data;
+            try {
+                data = JSON.parse(xhr.responseText);
+            } catch (e) {
+                addLog('Сервер вернул некорректный ответ', 'error');
+                startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+                startBtn.disabled = false;
+                isLocked = false;
+                dropZone.classList.remove('disabled');
+                return;
+            }
+            if (data.success) {
+                addLog('Файл загружен, ID: ' + data.file_id, 'success');
+                startParsing(data.file_id);
+            } else {
+                addLog('Ошибка загрузки: ' + (data.message || 'неизвестная ошибка'), 'error');
+                startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+                startBtn.disabled = false;
+                isLocked = false;
+                dropZone.classList.remove('disabled');
+            }
+        });
+
+        xhr.addEventListener('error', function() {
+            addLog('Ошибка соединения при загрузке файла', 'error');
+            startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
+            startBtn.disabled = false;
+            isLocked = false;
+            dropZone.classList.remove('disabled');
+        });
+
+        xhr.open('POST', 'api/upload.php');
+        xhr.send(formData);
+    });
+
+    function startParsing(fileId) {
+        isProcessing = true;
+        isCompleted = false;
+        progressArea.style.display = 'block';
+        startTime = Date.now();
+        setButtonProcessing();
+        disableDownloadButton();
+
+        progressIcon.className = 'fas fa-spinner fa-spin me-2';
+        progressText.textContent = 'Обработка...';
+        progressBar.classList.remove('bg-success', 'bg-danger');
+        progressBar.classList.add('bg-primary', 'progress-bar-animated');
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressPercent.textContent = '0%';
+
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(function() {
+            var elapsed = Math.floor((Date.now() - startTime) / 1000);
+            elapsedTime.textContent = formatTime(elapsed);
+        }, 1000);
+
+        fetch('api/parse.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file_id: fileId })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                currentJobId = data.job_id;
+                createGlobalLock(selectedFile ? selectedFile.name : 'неизвестный файл', data.job_id)
+                    .then(function(lockData) {
+                        if (lockData.success) {
+                            addLog('Глобальная блокировка создана', 'info');
+                            hideLockNotice();
+                        }
+                    });
+                addLog('Парсинг запущен, Job ID: ' + data.job_id, 'success');
+                if (statusInterval) clearInterval(statusInterval);
+                statusInterval = setInterval(fetchStatus, 2000);
+            } else {
+                addLog('Ошибка запуска парсинга: ' + (data.message || 'неизвестная ошибка'), 'error');
+                isProcessing = false;
+                setButtonIdle();
+                dropZone.classList.remove('disabled');
+                if (timerInterval) clearInterval(timerInterval);
+                setStatus('error', 'Ошибка');
+                isLocked = false;
+            }
+        })
+        .catch(function(err) {
+            addLog('Ошибка соединения: ' + err.message, 'error');
+            isProcessing = false;
+            setButtonIdle();
+            dropZone.classList.remove('disabled');
+            if (timerInterval) clearInterval(timerInterval);
+            isLocked = false;
+        });
+    }
+
+    // ============================================================
+    // 12. ПОЛУЧЕНИЕ СТАТУСА
+    // ============================================================
+    function fetchStatus() {
+        if (!currentJobId) return;
+        fetch('api/status.php?job_id=' + currentJobId + '&since=' + logCursor)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                updateStats(data);
+                if (data.status === 'completed' || data.status === 'error') {
+                    clearInterval(statusInterval);
+                    if (timerInterval) clearInterval(timerInterval);
+                    isProcessing = false;
+                    isLocked = false;
+                    dropZone.classList.remove('disabled');
+                    enableDownloadButton();
+                    releaseGlobalLock()
+                        .then(function(lockData) {
+                            if (lockData.success) {
+                                addLog('Глобальная блокировка снята', 'info');
+                                hideLockNotice();
+                            }
+                        });
+                    var elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    elapsedTime.textContent = formatTime(elapsed);
+                    if (data.status === 'completed') {
+                        addLog('Обработка завершена успешно!', 'success');
+                    } else {
+                        addLog('Обработка завершена с ошибками', 'error');
+                    }
+                    loadHistory();
+                }
+            })
+            .catch(function(err) {});
+    }
+
+    // ============================================================
+    // 13. СБРОС
+    // ============================================================
+    function resetAll() {
+        if (statusInterval) clearInterval(statusInterval);
+        if (timerInterval) clearInterval(timerInterval);
+        if (historyInterval) clearInterval(historyInterval);
+        statusInterval = null;
+        timerInterval = null;
+        historyInterval = null;
+
+        if (currentJobId) {
+            releaseGlobalLock()
+                .then(function(lockData) {
+                    if (lockData.success) {
+                        addLog('Глобальная блокировка снята', 'info');
+                        hideLockNotice();
+                    }
+                });
+        }
+
+        isProcessing = false;
+        isCompleted = false;
+        isLocked = false;
+        logCursor = 0;
+        currentJobId = null;
+        hasErrorsFile = false;
+
+        totalLines.textContent = '0';
+        successCount.textContent = '0';
+        errorCount.textContent = '0';
+        elapsedTime.textContent = '00:00';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressPercent.textContent = '0%';
+        progressArea.style.display = 'none';
+        errorDetails.style.display = 'none';
+        setStatus('idle', 'Ожидание');
+        dropZone.classList.remove('disabled');
+        hideLockNotice();
+        disableDownloadButton('Ожидание завершения обработки');
+        setButtonIdle();
+        clearState();
+        removeFile();
+        clearLogs();
+        addLog('Сброс выполнен. Все данные очищены.', 'info');
+    }
+
+    resetBtn.addEventListener('click', function() {
+        if (isProcessing) {
+            if (!confirm('Обработка ещё идёт. Вы уверены, что хотите сбросить?')) return;
+        }
+        resetAll();
+    });
+
+    // ============================================================
+    // 14. ОЧИСТКА ЛОГОВ
+    // ============================================================
+    clearLogsBtn.addEventListener('click', function() {
+        clearLogs();
+        addLog('Лог очищен', 'info');
+    });
+
+    // ============================================================
+    // 15. ОБНОВЛЕНИЕ ИСТОРИИ
+    // ============================================================
+    refreshHistoryBtn.addEventListener('click', function() {
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Загрузка...';
+        this.disabled = true;
+        loadHistory();
+        setTimeout(function() {
+            refreshHistoryBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Обновить';
+            refreshHistoryBtn.disabled = false;
+        }, 1000);
+    });
+
+    // ============================================================
+    // 16. СКАЧИВАНИЕ ОШИБОК
+    // ============================================================
+    downloadErrorsBtn.addEventListener('click', function() {
+        if (this.disabled) return;
+        if (currentJobId && hasErrorsFile) {
+            window.location.href = 'api/download-errors.php?job_id=' + currentJobId;
+        } else {
+            addLog('Нет данных об ошибках для скачивания', 'error');
+        }
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-check me-2"></i>Скачано';
+    });
+
+    // ============================================================
+    // 17. ОЧИСТКА БАЗЫ
+    // ============================================================
+    window.clearDatabase = function() {
+        if (!confirm('Точно удалить ВСЕ записи из базы?')) return;
+        fetch('api/clear.php', { method: 'POST' })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    alert('Удалено записей: ' + data.deleted_count);
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            })
+            .catch(function(err) {
+                alert('Ошибка соединения: ' + err.message);
+            });
+    };
+
+    // ============================================================
+    // 18. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ
+    // ============================================================
+    function restoreState() {
+        var savedState = loadState();
+        if (!savedState) {
+            setButtonIdle();
+            return;
+        }
+
+        // Восстанавливаем jobId для всех состояний
+        if (savedState.jobId) {
+            currentJobId = savedState.jobId;
+        }
+
+        // Восстанавливаем флаг наличия ошибок
+        if (savedState.has_errors !== undefined) {
+            hasErrorsFile = savedState.has_errors;
+        }
+
+        // Восстанавливаем прогресс
+        if (savedState.progress !== undefined && savedState.progress > 0) {
+            progressArea.style.display = 'block';
+            progressBar.style.width = savedState.progress + '%';
+            progressBar.textContent = savedState.progress + '%';
+            progressPercent.textContent = savedState.progress + '%';
+        }
+
+        if (savedState.stats) {
+            totalLines.textContent = savedState.stats.total || 0;
+            successCount.textContent = savedState.stats.success || 0;
+            errorCount.textContent = savedState.stats.errors || 0;
+        }
+
+        if (savedState.logs && savedState.logs.length > 0) {
+            savedState.logs.forEach(function(log) {
+                addLog(log.message, log.type || 'info');
+            });
+        }
+
+        if (savedState.lockNotice && savedState.lockNoticeText) {
+            showLockNotice(savedState.lockNoticeText);
+        }
+
+        // Восстанавливаем состояние кнопок
+        if (savedState.completed) {
+            setStatus('completed', 'Завершено');
+            progressIcon.className = 'fas fa-check-circle me-2 text-success';
+            progressText.textContent = 'Завершено';
+            progressBar.classList.remove('progress-bar-animated');
+            progressBar.classList.add('bg-success');
+            setButtonDone();
+            
+            if (savedState.error_groups && savedState.error_groups.length > 0) {
+                showErrorGroups(savedState.error_groups);
+            } else {
+                hasErrorsFile = false;
+                errorDetails.style.display = 'none';
+            }
+            enableDownloadButton();
+            addLog('Восстановлено завершённое состояние. Job ID: ' + currentJobId, 'info');
+
+        } else if (savedState.isProcessing) {
+            isProcessing = true;
+            logCursor = savedState.logCursor || 0;
+            startTime = savedState.startTime || Date.now();
+
+            setStatus('processing', 'Обработка...');
+            setButtonProcessing();
+            disableDownloadButton();
+
+            if (!statusInterval) {
+                statusInterval = setInterval(fetchStatus, 2000);
+            }
+            if (!timerInterval) {
+                timerInterval = setInterval(function() {
+                    var elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    elapsedTime.textContent = formatTime(elapsed);
+                }, 1000);
+            }
+
+            addLog('Восстановлена обработка задачи: ' + currentJobId, 'info');
+
+        } else {
+            setButtonIdle();
+        }
+    }
+
+    // ============================================================
+    // 19. ИНИЦИАЛИЗАЦИЯ
+    // ============================================================
+    clearLogs();
+    setStatus('idle', 'Ожидание');
+    disableDownloadButton('Ожидание завершения обработки');
+    setButtonIdle();
+    addLog('Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
+    loadHistory();
+
+    restoreState();
+
+    checkGlobalLock().then(function(isLocked) {
+        if (isLocked) {
+            setButtonLocked();
+            dropZone.classList.add('disabled');
+        }
+    });
+
+    historyInterval = setInterval(loadHistory, 30000);
+
+});
+</script>
 
 </body>
-
 </html>
