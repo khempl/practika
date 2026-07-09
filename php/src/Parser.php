@@ -94,9 +94,9 @@ class Parser
             $meterValueRaw = trim($meterFields[$i + 1]);
 
             // формат вида "3301660393 ХВС" или "3302248479 СХВ полив"
-            if ($meterName === '' || !preg_match('/^\d+\s*[А-Яа-яЁёA-Za-z0-9\-\/\)\(\.\,\s]+$/u', $meterName)) {
-                return ['ok' => false, 'error' => "некорректный прибор учёта: '$meterName'", 'error_type' => 'meter'];
-            }
+           if ($meterName === '' || !preg_match('/^\d+.*$/us', $meterName)) { 
+               return ['ok' => false, 'error' => "некорректный прибор учёта: '$meterName'", 'error_type' => 'meter'];    
+           }
             if (!preg_match('/^\d+(\.\d+)?$/', $meterValueRaw)) {
                 return ['ok' => false, 'error' => "некорректное показание прибора: '$meterValueRaw'", 'error_type' => 'meter'];
             }
