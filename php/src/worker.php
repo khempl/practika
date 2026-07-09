@@ -85,7 +85,7 @@ $needsConversion = !mb_check_encoding($sample, 'UTF-8');
 
 $state = [
     'status' => 'processing',
-    'total' => $totalBytes,
+    'total' => 0,
     'processed' => 0,
     'success' => 0,
     'errors' => 0,
@@ -235,6 +235,7 @@ if (!empty($batch)) {
 fclose($fh);
 
 $state['processed'] = $lineNo;
+$state['total'] = $lineNo;
 $state['progress'] = 100;
 $state['status'] = 'completed';
 $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
