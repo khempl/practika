@@ -57,6 +57,10 @@ class Parser
 
         // адрес: нас.пункт, улица, дом, [квартира]
         $addressParts = array_map('trim', explode(',', $addressRaw));
+
+        // убираем пустые "провалы", которые получаются из двойных/лишних запятых
+        $addressParts = array_values(array_filter($addressParts, fn($part) => $part !== ''));
+
         if (count($addressParts) < 3) {
             return ['ok' => false, 'error' => "некорректный адрес, меньше 3 частей: '$addressRaw'", 'error_type' => 'address'];
         }
