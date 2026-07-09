@@ -309,10 +309,10 @@
                     </h1>
                     <p class="text-muted">Загрузите файл с платежными документами. Система обработает 700 000+ строк.
                     </p>
-                    <p class="small"><a href="list.php">Посмотреть записи в базе</a></p>
+                    <p class="small"><a href="list.php">Посмотреть записи в базе данных</a></p>
                     <button onclick="clearDatabase()"
                             style="background:#dc2626; color:#fff; border:none; margin: 10px; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px;">
-                            🗑️ Очистить базу данных
+                            Очистить базу данных
                     </button>
                 </div>
 
@@ -349,12 +349,7 @@
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
-
-                        <button onclick="clearDatabase()"
-                            style="background:#dc2626; color:#fff; border:none; margin: 10px; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:13px;">
-                            🗑️ Очистить базу данных
-                        </button>
-
+                        
                         <!-- Прогресс -->
                         <div id="progressArea" class="mt-4" style="display:none;">
                             <div class="d-flex justify-content-between small mb-1">
@@ -637,7 +632,7 @@
             function handleFile(file) {
                 if (!file) return;
                 selectedFile = file;
-                fileNameDisplay.textContent = '📎 ' + file.name;
+                fileNameDisplay.textContent = ' ' + file.name;
                 fileNameDisplay.style.display = 'inline-block';
                 dropText.textContent = 'Файл готов к загрузке';
 
@@ -645,7 +640,7 @@
                 fileInfoSize.textContent = formatFileSize(file.size);
                 fileInfo.classList.add('active');
 
-                addLog('📄 Выбран файл: ' + file.name + ' (' + formatFileSize(file.size) + ')', 'success');
+                addLog('Выбран файл: ' + file.name + ' (' + formatFileSize(file.size) + ')', 'success');
             }
 
             function removeFile() {
@@ -654,7 +649,7 @@
                 fileNameDisplay.style.display = 'none';
                 dropText.textContent = 'Перетащите файл сюда или кликните для выбора';
                 fileInfo.classList.remove('active');
-                addLog('🗑️ Файл удалён', 'info');
+                addLog('Файл удалён', 'info');
             }
 
             // ----- Drag & Drop -----
@@ -676,7 +671,7 @@
                 if (files.length > 0 && files[0].type === 'text/plain') {
                     handleFile(files[0]);
                 } else {
-                    addLog('⚠️ Пожалуйста, загрузите файл формата .txt', 'error');
+                    addLog('Пожалуйста, загрузите файл формата .txt', 'error');
                 }
             });
 
@@ -696,7 +691,7 @@
 
             startBtn.addEventListener('click', function () {
                 if (!selectedFile) {
-                    addLog('⚠️ Сначала выберите файл!', 'error');
+                    addLog('Сначала выберите файл!', 'error');
                     return;
                 }
 
@@ -713,7 +708,7 @@
                 const formData = new FormData();
                 formData.append('file', selectedFile);
 
-                addLog('📤 Отправка файла на сервер...', 'info');
+                addLog('Отправка файла на сервер...', 'info');
                 startBtn.disabled = true;
                 startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
                 logCursor = 0;
@@ -752,24 +747,24 @@
                     try {
                         data = JSON.parse(xhr.responseText);
                     } catch (e) {
-                        addLog('❌ Сервер вернул некорректный ответ', 'error');
+                        addLog('Сервер вернул некорректный ответ', 'error');
                         startBtn.disabled = false;
                         startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
                         return;
                     }
 
                     if (data.success) {
-                        addLog('✅ Файл загружен, ID: ' + data.file_id, 'success');
+                        addLog('Файл загружен, ID: ' + data.file_id, 'success');
                         startParsing(data.file_id);
                     } else {
-                        addLog('❌ Ошибка загрузки: ' + (data.message || 'неизвестная ошибка'), 'error');
+                        addLog('Ошибка загрузки: ' + (data.message || 'неизвестная ошибка'), 'error');
                         startBtn.disabled = false;
                         startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
                     }
                 });
 
                 xhr.addEventListener('error', () => {
-                    addLog('❌ Ошибка соединения при загрузке файла', 'error');
+                    addLog('Ошибка соединения при загрузке файла', 'error');
                     startBtn.disabled = false;
                     startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
                 });
@@ -819,16 +814,16 @@
                             if (statusInterval) clearInterval(statusInterval);
                             statusInterval = setInterval(fetchStatus, 1500);
                         } else {
-                            addLog('❌ Ошибка запуска парсинга: ' + (data.message || 'неизвестная ошибка'), 'error');
+                            addLog('Ошибка запуска парсинга: ' + (data.message || 'неизвестная ошибка'), 'error');
                             isProcessing = false;
                             startBtn.disabled = false;
                             startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
                             if (timerInterval) clearInterval(timerInterval);
-                            setStatus('error', '❌ Ошибка');
+                            setStatus('error', 'Ошибка');
                         }
                     })
                     .catch(err => {
-                        addLog('❌ Ошибка соединения: ' + err.message, 'error');
+                        addLog('Ошибка соединения: ' + err.message, 'error');
                         isProcessing = false;
                         startBtn.disabled = false;
                         startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Запустить парсинг';
@@ -870,7 +865,7 @@
                                 progressText.textContent = 'Завершено с ошибками';
                                 progressBar.classList.remove('progress-bar-animated', 'bg-primary');
                                 progressBar.classList.add('bg-danger');
-                                addLog('❌ Обработка завершена с ошибками', 'error');
+                                addLog('Обработка завершена с ошибками', 'error');
                             }
 
                             // Останавливаем таймер
@@ -893,14 +888,14 @@
                     if (!confirm('Обработка ещё идёт. Вы уверены, что хотите сбросить?')) return;
                 }
                 resetAll();
-                addLog('🔄 Сброс выполнен', 'info');
+                addLog('Сброс выполнен', 'info');
             });
 
             // ----- Очистка логов -----
 
             clearLogsBtn.addEventListener('click', function () {
                 clearLogs();
-                addLog('🧹 Лог очищен', 'info');
+                addLog('Лог очищен', 'info');
             });
 
             // ----- Скачивание ошибок -----
@@ -910,7 +905,7 @@
                 if (currentJobId) {
                     window.location.href = 'api/download-errors.php?job_id=' + currentJobId;
                 } else {
-                    addLog('⚠️ Нет данных об ошибках для скачивания', 'error');
+                    addLog('Нет данных об ошибках для скачивания', 'error');
                 }
                 this.disabled = true;
                 this.innerHTML = '<i class="fas fa-check me-2"></i>Скачано';
@@ -921,7 +916,7 @@
             clearLogs();
             setStatus('idle', 'Ожидание');
 
-            addLog('💡 Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
+            addLog('Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
 
         });
 
