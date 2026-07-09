@@ -85,14 +85,14 @@ $needsConversion = !mb_check_encoding($sample, 'UTF-8');
 
 $state = [
     'status' => 'processing',
-    'total' => $total,
+    'total' => $totalBytes,
     'processed' => 0,
     'success' => 0,
     'errors' => 0,
     'duplicates' => 0,
     'progress' => 0,
     'error_groups' => [],
-    'logs' => [['message' => "начата обработка файла: {$total} строк", 'type' => 'info']],
+    'logs' => [['message' => "начата обработка файла: " . round($totalBytes / 1024 / 1024, 1) . " МБ", 'type' => 'info']],
     'started_at' => time(),
 ];
 JobStore::save($jobId, $jobsDir, $state);
