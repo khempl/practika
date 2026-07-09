@@ -77,7 +77,7 @@ class Parser
 
         // сумма начисления - число с точкой, максимум 2 знака после запятой
         $totalRaw = trim($rest[0]);
-        if (!preg_match('/^\d+(\.\d{1,2})?$/', $totalRaw)) {
+        if (!preg_match('/^-?\d+(\.\d{1,2})?$/', $totalRaw)){
             return ['ok' => false, 'error' => "некорректная сумма начисления: '$totalRaw'", 'error_type' => 'amount'];
         }
         $total = (float) $totalRaw;
