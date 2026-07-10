@@ -9,3 +9,9 @@ function getMongoCollection(): \MongoDB\Collection
     $client = new MongoDB\Client($uri);
     return $client->utilities->payments;
 }
+function getHistoryCollection(): \MongoDB\Collection
+{
+    $uri = getenv('MONGO_URI') ?: 'mongodb://admin:admin_password@mongodb:27017';
+    $client = new MongoDB\Client($uri);
+    return $client->utilities->history;
+}
