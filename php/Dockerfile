@@ -15,7 +15,12 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader
 COPY src/ /var/www/html/
 COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
-RUN mkdir -p /var/www/html/errors /var/www/html/uploads /var/www/html/jobs \
-    && chmod -R 777 /var/www/html/errors /var/www/html/uploads /var/www/html/jobs
+# Копируем entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["php-fpm"]
 
 EXPOSE 9000
