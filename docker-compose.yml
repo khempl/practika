@@ -4,8 +4,8 @@ services:
     container_name: mongo_db
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: admin_password
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
       - mongo_data:/data/db
 
@@ -14,7 +14,7 @@ services:
     container_name: php_app
     restart: always
     environment:
-      MONGO_URI: "mongodb://admin:admin_password@mongodb:27017"
+      MONGO_URI: "mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017"
     volumes:
       - ./errors:/var/www/html/errors
       - ./uploads:/var/www/html/uploads
