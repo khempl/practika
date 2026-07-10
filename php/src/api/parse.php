@@ -2,8 +2,9 @@
 header('Content-Type: application/json; charset=utf-8');
 require __DIR__ . '/../JobStore.php';
 
-$input = json_decode(file_get_contents('php://input'), true) ?: [];
+$input = json_decode(file_get_contents('php://input'), true);
 $fileId = $input['file_id'] ?? '';
+$fileName = $input['file_name'] ?? 'без имени';
 
 if (!preg_match('/^[a-f0-9]{32}$/', $fileId)) {
     echo json_encode(['success' => false, 'message' => 'Некорректный file_id']);
@@ -51,6 +52,7 @@ $workerScript = __DIR__ . '/../worker.php';
 $cmd = escapeshellcmd($phpBin) . ' ' . escapeshellarg($workerScript)
     . ' ' . escapeshellarg($fileId)
     . ' ' . escapeshellarg($jobId)
+    . ' ' . escapeshellarg($fileName)
     . ' > /dev/null 2>&1 &';
 
 exec($cmd);
