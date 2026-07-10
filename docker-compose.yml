@@ -21,7 +21,21 @@ services:
       - ./jobs:/var/www/html/jobs
     depends_on:
       - mongodb
-
+      
+  cron:
+    build: ./php
+    container_name: php_cron
+    restart: always
+    environment:
+      MONGO_URI: "mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongodb:27017"
+    volumes:
+      - ./errors:/var/www/html/errors
+      - ./uploads:/var/www/html/uploads
+      - ./jobs:/var/www/html/jobs
+    depends_on:
+      - mongodb
+    command: ["/bin/sh", "-c", "while true; do php /var/www/html/cleanup.php || true; sleep 3600; done"]
+    
   nginx:
     build:
       context: .
