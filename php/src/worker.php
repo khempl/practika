@@ -215,6 +215,7 @@ while (($line = fgets($fh)) !== false) {
     }
 
     $state['processed'] = $lineNo;
+    $state['total'] = $lineNo;
 
     $now = microtime(true);
     if ($lineNo % 2000 === 0 || ($now - $lastSave) > 1.0) {
