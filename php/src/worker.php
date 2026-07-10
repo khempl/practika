@@ -16,6 +16,7 @@ require_once __DIR__ . '/JobStore.php';
 
 $fileId = $argv[1] ?? '';
 $jobId = $argv[2] ?? '';
+$fileName = $argv[3] ?? 'без имени';
 
 $baseDir = __DIR__;
 $uploadsDir = $baseDir . '/uploads';
@@ -243,5 +244,21 @@ $state['error_groups'] = recalcErrorGroups($errorCounts, $fieldLabels);
 $state['finished_at'] = time();
 $state['logs'][] = ['message' => "обработка завершена. успешно: {$state['success']}, отклонено: {$state['errors']}, дублей: {$state['duplicates']}", 'type' => 'success'];
 JobStore::save($jobId, $jobsDir, $state);
+
+// записываем итог в историю парсингов - отдельная коллекция, не смешивается с самими данными
+try {
+    $historyCollection = getHistoryCollection();
+    $historyCollection->insertOne([
+        'created_at' => $state['started_at'],
+        'file_name' => $fileName,
+        'total' => $state['total'],
+        'success' => $state['success'],
+        'errors' => $state['errors'],
+        'duplicates' => $state['duplicates'],
+        'duration_seconds' => $state['finished_at'] - $state['started_at'],
+    ]);
+} catch (\Throwable $e) {
+    // если запись истории не удалась - не роняем весь воркер из-за этого
+}
 
 @unlink($filePath);
