@@ -276,7 +276,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     // ============================================================
-    // 1. СОСТОЯНИЕ (localStorage)
+    // 1. СОСТОЯНИЕ (localStorage) - ТОЛЬКО ДЛЯ АКТИВНОГО ПАРСИНГА
     // ============================================================
     const STATE_KEY = 'parser_state';
 
@@ -417,7 +417,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentJobId = null;
     let logCursor = 0;
     let isLocked = false;
-    let hasErrorsFile = false;
 
     // ============================================================
     // 5. УПРАВЛЕНИЕ КНОПКАМИ
@@ -508,23 +507,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorGroupsContainer.appendChild(badge);
             });
             errorGroupsCount.textContent = groups.length + ' типов';
-            hasErrorsFile = true;
         } else {
             errorDetails.style.display = 'none';
-            hasErrorsFile = false;
         }
     }
 
     function enableDownloadButton() {
-        if (hasErrorsFile && currentJobId) {
-            downloadErrorsBtn.disabled = false;
-            downloadErrorsBtn.innerHTML = '<i class="fas fa-download me-2"></i>Скачать файл с ошибками';
-            downloadErrorsBtn.className = 'btn btn-outline-danger btn-sm';
-        } else {
-            downloadErrorsBtn.disabled = true;
-            downloadErrorsBtn.innerHTML = '<i class="fas fa-times me-2"></i>Ошибок нет';
-            downloadErrorsBtn.className = 'btn btn-outline-secondary btn-sm';
-        }
+        downloadErrorsBtn.disabled = false;
+        downloadErrorsBtn.innerHTML = '<i class="fas fa-download me-2"></i>Скачать файл с ошибками';
+        downloadErrorsBtn.className = 'btn btn-outline-danger btn-sm';
     }
 
     function disableDownloadButton(message) {
@@ -559,7 +550,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 8. ОБНОВЛЕНИЕ СТАТИСТИКИ И СОХРАНЕНИЕ СОСТОЯНИЯ
+    // 8. ОБНОВЛЕНИЕ СТАТИСТИКИ
     // ============================================================
     function updateStats(data) {
         totalLines.textContent = data.total || 0;
@@ -581,13 +572,11 @@ document.addEventListener('DOMContentLoaded', function() {
             hideLockNotice();
             isCompleted = true;
             isProcessing = false;
+            enableDownloadButton();
             if (data.error_groups && data.error_groups.length > 0) {
                 showErrorGroups(data.error_groups);
-            } else {
-                hasErrorsFile = false;
-                errorDetails.style.display = 'none';
             }
-            enableDownloadButton();
+            // ✅ Вызываем обновление истории после завершения
             loadHistory();
 
         } else if (data.status === 'error') {
@@ -600,13 +589,11 @@ document.addEventListener('DOMContentLoaded', function() {
             hideLockNotice();
             isCompleted = true;
             isProcessing = false;
+            enableDownloadButton();
             if (data.error_groups && data.error_groups.length > 0) {
                 showErrorGroups(data.error_groups);
-            } else {
-                hasErrorsFile = false;
-                errorDetails.style.display = 'none';
             }
-            enableDownloadButton();
+            // ✅ Вызываем обновление истории после завершения
             loadHistory();
 
         } else if (data.status === 'processing') {
@@ -619,6 +606,21 @@ document.addEventListener('DOMContentLoaded', function() {
             isProcessing = true;
             setButtonProcessing();
             disableDownloadButton();
+            
+            // Сохраняем состояние только во время обработки
+            saveState({
+                isProcessing: true,
+                jobId: currentJobId,
+                logCursor: logCursor,
+                startTime: startTime,
+                progress: data.progress || 0,
+                stats: {
+                    total: data.total || 0,
+                    success: data.success || 0,
+                    errors: data.errors || 0
+                },
+                timestamp: Date.now()
+            });
         }
 
         if (data.error_groups && data.error_groups.length > 0 && data.status !== 'completed' && data.status !== 'error') {
@@ -633,36 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof data.logs_total === 'number') {
             logCursor = data.logs_total;
         }
-
-        // ============================================================
-        // ★★★ СОХРАНЯЕМ СОСТОЯНИЕ В localStorage ★★★
-        // ============================================================
-        var isDone = data.status === 'completed' || data.status === 'error';
-        var hasErrors = (data.error_groups && data.error_groups.length > 0);
-        saveState({
-            isProcessing: data.status === 'processing',
-            completed: isDone,
-            jobId: currentJobId,
-            logCursor: logCursor,
-            startTime: startTime,
-            progress: data.progress || 0,
-            stats: {
-                total: data.total || 0,
-                success: data.success || 0,
-                errors: data.errors || 0
-            },
-            error_groups: data.error_groups || [],
-            has_errors: hasErrors,
-            logs: Array.from(logContainer.querySelectorAll('.log-line')).map(function(el) {
-                var text = el.textContent || '';
-                var type = el.className.includes('log-success') ? 'success' :
-                           el.className.includes('log-error') ? 'error' : 'info';
-                return { message: text.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, ''), type: type };
-            }).slice(0, 50),
-            lockNotice: lockNotice.classList.contains('active'),
-            lockNoticeText: lockNoticeText.textContent,
-            timestamp: Date.now()
-        });
     }
 
     // ============================================================
@@ -838,10 +810,14 @@ document.addEventListener('DOMContentLoaded', function() {
             elapsedTime.textContent = formatTime(elapsed);
         }, 1000);
 
+        // ✅ Передаем имя файла в запрос
         fetch('api/parse.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file_id: fileId })
+            body: JSON.stringify({ 
+                file_id: fileId,
+                file_name: selectedFile ? selectedFile.name : 'неизвестный файл'
+            })
         })
         .then(function(res) { return res.json(); })
         .then(function(data) {
@@ -907,7 +883,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         addLog('Обработка завершена с ошибками', 'error');
                     }
+                    // ✅ Обновляем историю после завершения
                     loadHistory();
+                    currentJobId = null;
                 }
             })
             .catch(function(err) {});
@@ -939,7 +917,6 @@ document.addEventListener('DOMContentLoaded', function() {
         isLocked = false;
         logCursor = 0;
         currentJobId = null;
-        hasErrorsFile = false;
 
         totalLines.textContent = '0';
         successCount.textContent = '0';
@@ -994,7 +971,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================================
     downloadErrorsBtn.addEventListener('click', function() {
         if (this.disabled) return;
-        if (currentJobId && hasErrorsFile) {
+        if (currentJobId) {
             window.location.href = 'api/download-errors.php?job_id=' + currentJobId;
         } else {
             addLog('Нет данных об ошибках для скачивания', 'error');
@@ -1024,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // ============================================================
-    // 18. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ
+    // 18. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ (только для активного парсинга)
     // ============================================================
     function restoreState() {
         var savedState = loadState();
@@ -1033,62 +1010,26 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Восстанавливаем jobId для всех состояний
-        if (savedState.jobId) {
+        // Восстанавливаем только если парсинг активен
+        if (savedState.isProcessing && savedState.jobId) {
             currentJobId = savedState.jobId;
-        }
-
-        // Восстанавливаем флаг наличия ошибок
-        if (savedState.has_errors !== undefined) {
-            hasErrorsFile = savedState.has_errors;
-        }
-
-        // Восстанавливаем прогресс
-        if (savedState.progress !== undefined && savedState.progress > 0) {
-            progressArea.style.display = 'block';
-            progressBar.style.width = savedState.progress + '%';
-            progressBar.textContent = savedState.progress + '%';
-            progressPercent.textContent = savedState.progress + '%';
-        }
-
-        if (savedState.stats) {
-            totalLines.textContent = savedState.stats.total || 0;
-            successCount.textContent = savedState.stats.success || 0;
-            errorCount.textContent = savedState.stats.errors || 0;
-        }
-
-        if (savedState.logs && savedState.logs.length > 0) {
-            savedState.logs.forEach(function(log) {
-                addLog(log.message, log.type || 'info');
-            });
-        }
-
-        if (savedState.lockNotice && savedState.lockNoticeText) {
-            showLockNotice(savedState.lockNoticeText);
-        }
-
-        // Восстанавливаем состояние кнопок
-        if (savedState.completed) {
-            setStatus('completed', 'Завершено');
-            progressIcon.className = 'fas fa-check-circle me-2 text-success';
-            progressText.textContent = 'Завершено';
-            progressBar.classList.remove('progress-bar-animated');
-            progressBar.classList.add('bg-success');
-            setButtonDone();
-            
-            if (savedState.error_groups && savedState.error_groups.length > 0) {
-                showErrorGroups(savedState.error_groups);
-            } else {
-                hasErrorsFile = false;
-                errorDetails.style.display = 'none';
-            }
-            enableDownloadButton();
-            addLog('Восстановлено завершённое состояние. Job ID: ' + currentJobId, 'info');
-
-        } else if (savedState.isProcessing) {
-            isProcessing = true;
             logCursor = savedState.logCursor || 0;
             startTime = savedState.startTime || Date.now();
+            isProcessing = true;
+
+            // Восстанавливаем прогресс
+            if (savedState.progress !== undefined && savedState.progress > 0) {
+                progressArea.style.display = 'block';
+                progressBar.style.width = savedState.progress + '%';
+                progressBar.textContent = savedState.progress + '%';
+                progressPercent.textContent = savedState.progress + '%';
+            }
+
+            if (savedState.stats) {
+                totalLines.textContent = savedState.stats.total || 0;
+                successCount.textContent = savedState.stats.success || 0;
+                errorCount.textContent = savedState.stats.errors || 0;
+            }
 
             setStatus('processing', 'Обработка...');
             setButtonProcessing();
@@ -1105,8 +1046,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             addLog('Восстановлена обработка задачи: ' + currentJobId, 'info');
-
         } else {
+            // Если состояние завершено или нет активного парсинга - очищаем
+            clearState();
             setButtonIdle();
         }
     }
@@ -1119,6 +1061,8 @@ document.addEventListener('DOMContentLoaded', function() {
     disableDownloadButton('Ожидание завершения обработки');
     setButtonIdle();
     addLog('Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
+    
+    // ✅ Загружаем историю при загрузке страницы
     loadHistory();
 
     restoreState();
