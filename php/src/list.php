@@ -431,7 +431,7 @@ $sortFields = [
             <h1>Записи в базе данных</h1>
         </div>
         <div>
-            <a href="index.php" class="btn btn-outline-secondary btn-sm">
+            <a href="index.html" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-arrow-left me-1"></i> На главную
             </a>
             <span class="badge-total ms-2">Всего: <?= number_format($total) ?></span>
