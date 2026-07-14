@@ -100,14 +100,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
             background: #cbd5e1;
             text-decoration: none;
         }
+        .btn-search,
+        .btn-filter-reset {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        } 
     </style>
 </head>
 <body>
 <div class="container py-4 py-md-5">
     <div class="row justify-content-center">
         <div class="col-lg-11">
-
-            <!-- Шапка с кнопками -->
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
                 <h1 class="fw-bold h2 mb-0">
                     <i class="fas fa-search text-primary me-3"></i>Поиск начислений
@@ -124,10 +129,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
 
             <div class="card main-card">
                 <div class="card-header">
-                    <span class="fw-semibold"><i class="fas fa-filter me-2"></i>Фильтры</span>
+                    <span class="fw-semibold"><i class="fas fa-filter me-2"></i>Форма</span>
                 </div>
                 <div class="card-body p-4">
-                    <form method="GET" action="client_search.php" class="row g-3 align-items-end">
+                    <form method="GET" action="client_search.php" class="row g-3 align-items-stretch">
                         <div class="col-md-3">
                             <label for="account" class="form-label">Лицевой счёт</label>
                             <input type="text" class="form-control" id="account" name="account"
