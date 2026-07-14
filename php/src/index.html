@@ -575,15 +575,11 @@ document.addEventListener('DOMContentLoaded', function() {
             hideLockNotice();
             isCompleted = true;
             isProcessing = false;
-            // ✅ Активируем кнопку скачивания если есть ошибки
-            if (data.errors > 0 && data.error_groups && data.error_groups.length > 0) {
-                enableDownloadButton();
-            } else {
-                disableDownloadButton('Ошибок нет');
-            }
+            enableDownloadButton();
             if (data.error_groups && data.error_groups.length > 0) {
                 showErrorGroups(data.error_groups);
             }
+            // ✅ Вызываем обновление истории после завершения
             loadHistory();
 
         } else if (data.status === 'error') {
@@ -596,15 +592,11 @@ document.addEventListener('DOMContentLoaded', function() {
             hideLockNotice();
             isCompleted = true;
             isProcessing = false;
-            // ✅ Активируем кнопку скачивания если есть ошибки
-            if (data.errors > 0 && data.error_groups && data.error_groups.length > 0) {
-                enableDownloadButton();
-            } else {
-                disableDownloadButton('Ошибок нет');
-            }
+            enableDownloadButton();
             if (data.error_groups && data.error_groups.length > 0) {
                 showErrorGroups(data.error_groups);
             }
+            // ✅ Вызываем обновление истории после завершения
             loadHistory();
 
         } else if (data.status === 'processing') {
@@ -616,8 +608,9 @@ document.addEventListener('DOMContentLoaded', function() {
             isCompleted = false;
             isProcessing = true;
             setButtonProcessing();
-            disableDownloadButton('Идет обработка...');
+            disableDownloadButton();
             
+            // Сохраняем состояние только во время обработки
             saveState({
                 isProcessing: true,
                 jobId: currentJobId,
@@ -727,7 +720,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         isLocked = true;
         dropZone.classList.add('disabled');
-        disableDownloadButton('Загрузка...');
+        disableDownloadButton();
 
         startBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Загрузка...';
         startBtn.disabled = true;
@@ -804,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function() {
         progressArea.style.display = 'block';
         startTime = Date.now();
         setButtonProcessing();
-        disableDownloadButton('Идет обработка...');
+        disableDownloadButton();
 
         progressIcon.className = 'fas fa-spinner fa-spin me-2';
         progressText.textContent = 'Обработка...';
@@ -820,6 +813,7 @@ document.addEventListener('DOMContentLoaded', function() {
             elapsedTime.textContent = formatTime(elapsed);
         }, 1000);
 
+        // ✅ Передаем имя файла в запрос
         fetch('api/parse.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -900,7 +894,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         addLog('Обработка завершена с ошибками', 'error');
                     }
                     loadHistory();
-                    currentJobId = null;
+                    // ⚠️ НЕ ОБНУЛЯЕМ currentJobId, чтобы кнопка скачивания могла его использовать
+                    // currentJobId = null; // <-- УБИРАЕМ ЭТУ СТРОКУ
                 }
             })
             .catch(function(err) {});
@@ -931,6 +926,7 @@ document.addEventListener('DOMContentLoaded', function() {
         isCompleted = false;
         isLocked = false;
         logCursor = 0;
+        // ✅ ОБНУЛЯЕМ currentJobId ТОЛЬКО при сбросе
         currentJobId = null;
 
         totalLines.textContent = '0';
@@ -982,7 +978,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 16. СКАЧИВАНИЕ ОШИБОК - ИСПРАВЛЕНО
+    // 16. СКАЧИВАНИЕ ОШИБОК
     // ============================================================
     downloadErrorsBtn.addEventListener('click', function(e) {
         e.preventDefault();
@@ -1003,38 +999,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Создаем ссылку для скачивания
         var downloadUrl = 'api/download-errors.php?job_id=' + currentJobId;
         
-        // Открываем в новом окне или используем скрытый iframe
+        // Открываем в новой вкладке
         window.open(downloadUrl, '_blank');
         
-        // Или можно использовать обычный переход
-        // window.location.href = downloadUrl;
-        
-        // Показываем сообщение
         addLog('Файл с ошибками отправлен на скачивание', 'success');
     });
 
     // ============================================================
-    // 17. ОЧИСТКА БАЗЫ
-    // ============================================================
-    window.clearDatabase = function() {
-        if (!confirm('Точно удалить ВСЕ записи из базы?')) return;
-        fetch('api/clear.php', { method: 'POST' })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    alert('Удалено записей: ' + data.deleted_count);
-                    location.reload();
-                } else {
-                    alert('Ошибка: ' + data.message);
-                }
-            })
-            .catch(function(err) {
-                alert('Ошибка соединения: ' + err.message);
-            });
-    };
-
-    // ============================================================
-    // 18. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ
+    // 18. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ (только для активного парсинга)
     // ============================================================
     function restoreState() {
         var savedState = loadState();
@@ -1043,12 +1015,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Восстанавливаем только если парсинг активен
         if (savedState.isProcessing && savedState.jobId) {
             currentJobId = savedState.jobId;
             logCursor = savedState.logCursor || 0;
             startTime = savedState.startTime || Date.now();
             isProcessing = true;
 
+            // Восстанавливаем прогресс
             if (savedState.progress !== undefined && savedState.progress > 0) {
                 progressArea.style.display = 'block';
                 progressBar.style.width = savedState.progress + '%';
@@ -1064,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             setStatus('processing', 'Обработка...');
             setButtonProcessing();
-            disableDownloadButton('Идет обработка...');
+            disableDownloadButton();
 
             if (!statusInterval) {
                 statusInterval = setInterval(fetchStatus, 2000);
@@ -1078,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             addLog('Восстановлена обработка задачи: ' + currentJobId, 'info');
         } else {
+            // Если состояние завершено или нет активного парсинга - очищаем
             clearState();
             setButtonIdle();
         }
@@ -1092,7 +1067,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setButtonIdle();
     addLog('Готов к работе. Загрузите файл и нажмите "Запустить парсинг"', 'info');
     
+    // ✅ Загружаем историю при загрузке страницы
     loadHistory();
+
     restoreState();
 
     checkGlobalLock().then(function(isLocked) {
