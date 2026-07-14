@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
         .badge-info { background: #dbeafe; color: #1e3a8a; }
 
         .btn-search {
-            padding: 4px 16px;
+            padding: 4px 24px;
             background: #2563eb;
             color: white;
             border: none;
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
                             <input type="text" class="form-control" id="period" name="period"
                                    value="<?= htmlspecialchars($period) ?>" placeholder="Например: 519">
                         </div>
-                        <div class="col-md-4 d-flex gap-2 align-items-end">
+                        <div class="col-md-4 d-flex flex-column gap-1 align-items-start">
                             <button type="submit" class="btn-search">
                                 <i class="fas fa-search me-2"></i>Найти
                             </button>
