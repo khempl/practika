@@ -902,7 +902,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 15. СКАЧИВАНИЕ ОШИБОК
+    // 15. СКАЧИВАНИЕ ОШИБОК (с проверкой существования файла)
     // ============================================================
     downloadErrorsBtn.addEventListener('click', function(e) {
         e.preventDefault();
@@ -916,13 +916,35 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        addLog('Скачивание файла с ошибками для задачи: ' + currentJobId, 'info');
+        // Отключаем кнопку на время проверки
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Проверка...';
         
-        var downloadUrl = 'api/download-errors.php?job_id=' + currentJobId;
-        window.open(downloadUrl, '_blank');
-        // window.location.href = downloadUrl;
-        
-        addLog('Файл с ошибками отправлен на скачивание', 'success');
+        // Проверяем существование файла
+        var checkUrl = 'api/download-errors.php?job_id=' + currentJobId + '&check=1';
+        fetch(checkUrl)
+            .then(function(response) {
+                if (response.status === 404) {
+                    addLog('Файл с ошибками не найден на сервере', 'error');
+                    disableDownloadButton('Файл не найден');
+                    return;
+                }
+                if (!response.ok) {
+                    addLog('Ошибка при проверке файла: ' + response.status, 'error');
+                    enableDownloadButton();
+                    return;
+                }
+                // Файл существует - скачиваем
+                addLog('Файл найден, скачивание...', 'success');
+                var downloadUrl = 'api/download-errors.php?job_id=' + currentJobId;
+                window.open(downloadUrl, '_blank');
+                addLog('Файл с ошибками отправлен на скачивание', 'success');
+                enableDownloadButton();
+            })
+            .catch(function(err) {
+                addLog('Ошибка при проверке файла: ' + err.message, 'error');
+                enableDownloadButton();
+            });
     });
 
     // ============================================================
