@@ -65,9 +65,6 @@
         .btn-outline-danger:hover { background: #fef2f2; color: #b91c1c !important; border-color: #f87171; }
         .btn-outline-danger:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-sm { padding: 4px 12px; font-size: 13px; }
-        .lock-notice { display: none; background: #fef9c3; border: 1px solid #facc15; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; color: #854d0e; font-size: 14px; }
-        .lock-notice.active { display: block; }
-        .lock-notice .lock-icon { margin-right: 8px; }
         .history-section { margin-top: 16px; }
         .history-section .history-title { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 8px; }
         .history-table-wrap { max-height: 200px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
@@ -129,11 +126,6 @@
         </div>
 
         <div class="card-body">
-
-            <div class="lock-notice" id="lockNotice">
-                <i class="fas fa-lock lock-icon"></i>
-                <span id="lockNoticeText">Система занята другим пользователем</span>
-            </div>
 
             <div id="dropZone" class="drop-zone">
                 <i class="fas fa-cloud-upload-alt"></i>
@@ -300,76 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 2. ГЛОБАЛЬНАЯ БЛОКИРОВКА
-    // ============================================================
-    let sessionId = localStorage.getItem('parser_session_id');
-    if (!sessionId) {
-        sessionId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-        localStorage.setItem('parser_session_id', sessionId);
-    }
-
-    const lockNotice = document.getElementById('lockNotice');
-    const lockNoticeText = document.getElementById('lockNoticeText');
-
-    function showLockNotice(message) {
-        lockNoticeText.textContent = message || 'Система занята другим пользователем';
-        lockNotice.classList.add('active');
-    }
-
-    function hideLockNotice() {
-        lockNotice.classList.remove('active');
-    }
-
-    function checkGlobalLock() {
-        return fetch('api/lock.php')
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.locked) {
-                    const user = data.user || 'Неизвестный пользователь';
-                    const file = data.file_name || 'неизвестный файл';
-                    const isOwn = data.session_id === sessionId;
-                    if (!isOwn) {
-                        showLockNotice('Система занята пользователем: ' + user + ' (файл: ' + file + ')');
-                        dropZone.classList.add('disabled');
-                        startBtn.style.display = 'inline-block';
-                        startBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Система занята';
-                        startBtn.className = 'btn btn-primary-gradient';
-                        startBtn.disabled = true;
-                        return true;
-                    } else {
-                        hideLockNotice();
-                        return false;
-                    }
-                }
-                hideLockNotice();
-                return false;
-            })
-            .catch(function() { hideLockNotice(); return false; });
-    }
-
-    function createGlobalLock(fileName, jobId) {
-        return fetch('api/lock.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user: 'Пользователь',
-                file_name: fileName,
-                job_id: jobId,
-                session_id: sessionId
-            })
-        }).then(function(res) { return res.json(); });
-    }
-
-    function releaseGlobalLock() {
-        return fetch('api/lock.php', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: sessionId })
-        }).then(function(res) { return res.json(); });
-    }
-
-    // ============================================================
-    // 3. DOM ЭЛЕМЕНТЫ
+    // 2. DOM ЭЛЕМЕНТЫ
     // ============================================================
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
@@ -408,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const historyTableWrap = document.getElementById('historyTableWrap');
 
     // ============================================================
-    // 4. ПЕРЕМЕННЫЕ
+    // 3. ПЕРЕМЕННЫЕ
     // ============================================================
     let selectedFile = null;
     let statusInterval = null;
@@ -422,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let isLocked = false;
 
     // ============================================================
-    // 5. УПРАВЛЕНИЕ КНОПКАМИ
+    // 4. УПРАВЛЕНИЕ КНОПКАМИ
     // ============================================================
     function setButtonIdle() {
         startBtn.style.display = 'inline-block';
@@ -444,17 +367,8 @@ document.addEventListener('DOMContentLoaded', function() {
         dropZone.classList.remove('disabled');
     }
 
-    function setButtonLocked() {
-        startBtn.style.display = 'inline-block';
-        doneBtn.style.display = 'none';
-        startBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Система занята';
-        startBtn.className = 'btn btn-primary-gradient';
-        startBtn.disabled = true;
-        dropZone.classList.add('disabled');
-    }
-
     // ============================================================
-    // 6. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // 5. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
     // ============================================================
     function formatFileSize(bytes) {
         if (bytes < 1024) return bytes + ' B';
@@ -528,7 +442,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 7. ИСТОРИЯ
+    // 6. ИСТОРИЯ
     // ============================================================
     function loadHistory() {
         fetch('api/history.php')
@@ -553,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 8. ОБНОВЛЕНИЕ СТАТИСТИКИ
+    // 7. ОБНОВЛЕНИЕ СТАТИСТИКИ
     // ============================================================
     function updateStats(data) {
         totalLines.textContent = data.total || 0;
@@ -572,11 +486,9 @@ document.addEventListener('DOMContentLoaded', function() {
             progressIcon.className = 'fas fa-check-circle me-2 text-success';
             progressText.textContent = 'Завершено';
             setButtonDone();
-            hideLockNotice();
             isCompleted = true;
             isProcessing = false;
             
-            // ✅ Активируем кнопку скачивания если есть ошибки
             if (data.errors > 0 && data.error_groups && data.error_groups.length > 0) {
                 enableDownloadButton();
             } else {
@@ -587,10 +499,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 showErrorGroups(data.error_groups);
             }
             
-            // ✅ Сохраняем завершенное состояние с jobId
+            // ✅ Сохраняем ВСЁ состояние
             saveState({
-                completed: true,
+                status: 'completed',
                 jobId: currentJobId,
+                progress: 100,
                 stats: {
                     total: data.total || 0,
                     success: data.success || 0,
@@ -610,11 +523,9 @@ document.addEventListener('DOMContentLoaded', function() {
             progressIcon.className = 'fas fa-times-circle me-2 text-danger';
             progressText.textContent = 'Завершено с ошибками';
             setButtonDone();
-            hideLockNotice();
             isCompleted = true;
             isProcessing = false;
             
-            // ✅ Активируем кнопку скачивания если есть ошибки
             if (data.errors > 0 && data.error_groups && data.error_groups.length > 0) {
                 enableDownloadButton();
             } else {
@@ -625,10 +536,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 showErrorGroups(data.error_groups);
             }
             
-            // ✅ Сохраняем завершенное состояние с jobId
+            // ✅ Сохраняем ВСЁ состояние
             saveState({
-                completed: true,
+                status: 'error',
                 jobId: currentJobId,
+                progress: 100,
                 stats: {
                     total: data.total || 0,
                     success: data.success || 0,
@@ -652,8 +564,9 @@ document.addEventListener('DOMContentLoaded', function() {
             setButtonProcessing();
             disableDownloadButton('Идет обработка...');
             
+            // ✅ Сохраняем состояние обработки
             saveState({
-                isProcessing: true,
+                status: 'processing',
                 jobId: currentJobId,
                 logCursor: logCursor,
                 startTime: startTime,
@@ -682,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 9. ОБРАБОТКА ФАЙЛА
+    // 8. ОБРАБОТКА ФАЙЛА
     // ============================================================
     function handleFile(file) {
         if (!file) return;
@@ -711,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 10. DRAG & DROP
+    // 9. DRAG & DROP
     // ============================================================
     dropZone.addEventListener('dragover', function(e) {
         e.preventDefault();
@@ -750,7 +663,7 @@ document.addEventListener('DOMContentLoaded', function() {
     removeFileBtn.addEventListener('click', removeFile);
 
     // ============================================================
-    // 11. ЗАПУСК ПАРСИНГА
+    // 10. ЗАПУСК ПАРСИНГА
     // ============================================================
     startBtn.addEventListener('click', function() {
         if (!selectedFile) {
@@ -866,13 +779,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(function(data) {
             if (data.success) {
                 currentJobId = data.job_id;
-                createGlobalLock(selectedFile ? selectedFile.name : 'неизвестный файл', data.job_id)
-                    .then(function(lockData) {
-                        if (lockData.success) {
-                            addLog('Глобальная блокировка создана', 'info');
-                            hideLockNotice();
-                        }
-                    });
                 addLog('Парсинг запущен, Job ID: ' + data.job_id, 'success');
                 if (statusInterval) clearInterval(statusInterval);
                 statusInterval = setInterval(fetchStatus, 2000);
@@ -897,7 +803,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================================
-    // 12. ПОЛУЧЕНИЕ СТАТУСА
+    // 11. ПОЛУЧЕНИЕ СТАТУСА
     // ============================================================
     function fetchStatus() {
         if (!currentJobId) return;
@@ -912,20 +818,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     isLocked = false;
                     dropZone.classList.remove('disabled');
                     
-                    // ✅ Активируем кнопку скачивания если есть ошибки
                     if (data.errors > 0 && data.error_groups && data.error_groups.length > 0) {
                         enableDownloadButton();
                     } else {
                         disableDownloadButton('Ошибок нет');
                     }
                     
-                    releaseGlobalLock()
-                        .then(function(lockData) {
-                            if (lockData.success) {
-                                addLog('Глобальная блокировка снята', 'info');
-                                hideLockNotice();
-                            }
-                        });
                     var elapsed = Math.floor((Date.now() - startTime) / 1000);
                     elapsedTime.textContent = formatTime(elapsed);
                     if (data.status === 'completed') {
@@ -934,14 +832,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         addLog('Обработка завершена с ошибками', 'error');
                     }
                     loadHistory();
-                    // ⚠️ НЕ ОБНУЛЯЕМ currentJobId, чтобы кнопка скачивания могла его использовать
                 }
             })
             .catch(function(err) {});
     }
 
     // ============================================================
-    // 13. СБРОС
+    // 12. СБРОС
     // ============================================================
     function resetAll() {
         if (statusInterval) clearInterval(statusInterval);
@@ -951,21 +848,10 @@ document.addEventListener('DOMContentLoaded', function() {
         timerInterval = null;
         historyInterval = null;
 
-        if (currentJobId) {
-            releaseGlobalLock()
-                .then(function(lockData) {
-                    if (lockData.success) {
-                        addLog('Глобальная блокировка снята', 'info');
-                        hideLockNotice();
-                    }
-                });
-        }
-
         isProcessing = false;
         isCompleted = false;
         isLocked = false;
         logCursor = 0;
-        // ✅ ОБНУЛЯЕМ currentJobId ТОЛЬКО при сбросе
         currentJobId = null;
 
         totalLines.textContent = '0';
@@ -979,7 +865,6 @@ document.addEventListener('DOMContentLoaded', function() {
         errorDetails.style.display = 'none';
         setStatus('idle', 'Ожидание');
         dropZone.classList.remove('disabled');
-        hideLockNotice();
         disableDownloadButton('Ожидание завершения обработки');
         setButtonIdle();
         clearState();
@@ -996,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 14. ОЧИСТКА ЛОГОВ
+    // 13. ОЧИСТКА ЛОГОВ
     // ============================================================
     clearLogsBtn.addEventListener('click', function() {
         clearLogs();
@@ -1004,7 +889,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 15. ОБНОВЛЕНИЕ ИСТОРИИ
+    // 14. ОБНОВЛЕНИЕ ИСТОРИИ
     // ============================================================
     refreshHistoryBtn.addEventListener('click', function() {
         this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Загрузка...';
@@ -1017,17 +902,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ============================================================
-    // 16. СКАЧИВАНИЕ ОШИБОК
+    // 15. СКАЧИВАНИЕ ОШИБОК
     // ============================================================
     downloadErrorsBtn.addEventListener('click', function(e) {
         e.preventDefault();
         
-        // Проверяем, не disabled ли кнопка
         if (this.disabled) {
             return;
         }
         
-        // Проверяем наличие job_id
         if (!currentJobId) {
             addLog('Нет активной задачи для скачивания ошибок', 'error');
             return;
@@ -1035,21 +918,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         addLog('Скачивание файла с ошибками для задачи: ' + currentJobId, 'info');
         
-        // Создаем скрытую ссылку и имитируем клик для скачивания
         var downloadUrl = 'api/download-errors.php?job_id=' + currentJobId;
-        var link = document.createElement('a');
-        link.href = downloadUrl;
-        link.target = '_blank';
-        link.download = ''; // пустой download заставит браузер использовать имя из Content-Disposition
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        window.open(downloadUrl, '_blank');
+        // window.location.href = downloadUrl;
         
         addLog('Файл с ошибками отправлен на скачивание', 'success');
     });
 
     // ============================================================
-    // 17. ОЧИСТКА БАЗЫ
+    // 16. ОЧИСТКА БАЗЫ
     // ============================================================
     window.clearDatabase = function() {
         if (!confirm('Точно удалить ВСЕ записи из базы?')) return;
@@ -1069,7 +946,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // ============================================================
-    // 18. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ
+    // 17. ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПРИ ЗАГРУЗКЕ
     // ============================================================
     function restoreState() {
         var savedState = loadState();
@@ -1078,8 +955,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // ✅ Восстанавливаем jobId для завершенных задач
-        if (savedState.completed && savedState.jobId) {
+        // ✅ Восстанавливаем завершенную задачу (completed или error)
+        if ((savedState.status === 'completed' || savedState.status === 'error') && savedState.jobId) {
             currentJobId = savedState.jobId;
             
             // Восстанавливаем статистику
@@ -1089,14 +966,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorCount.textContent = savedState.stats.errors || 0;
             }
             
+            // Восстанавливаем прогресс (100%)
+            progressArea.style.display = 'block';
+            progressBar.style.width = '100%';
+            progressBar.textContent = '100%';
+            progressPercent.textContent = '100%';
+            
             // Восстанавливаем ошибки
             if (savedState.has_errors && savedState.error_groups && savedState.error_groups.length > 0) {
                 showErrorGroups(savedState.error_groups);
                 enableDownloadButton();
-                setStatus('completed', 'Завершено');
-            } else if (savedState.completed) {
-                setStatus('completed', 'Завершено');
+            } else {
                 disableDownloadButton('Ошибок нет');
+            }
+            
+            // Восстанавливаем статус
+            if (savedState.status === 'completed') {
+                setStatus('completed', 'Завершено');
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-success');
+                progressIcon.className = 'fas fa-check-circle me-2 text-success';
+                progressText.textContent = 'Завершено';
+            } else {
+                setStatus('error', 'Ошибка');
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-danger');
+                progressIcon.className = 'fas fa-times-circle me-2 text-danger';
+                progressText.textContent = 'Завершено с ошибками';
             }
             
             setButtonDone();
@@ -1104,13 +1000,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Восстанавливаем активный парсинг
-        if (savedState.isProcessing && savedState.jobId) {
+        // ✅ Восстанавливаем активный парсинг
+        if (savedState.status === 'processing' && savedState.jobId) {
             currentJobId = savedState.jobId;
             logCursor = savedState.logCursor || 0;
             startTime = savedState.startTime || Date.now();
             isProcessing = true;
 
+            // Восстанавливаем прогресс
             if (savedState.progress !== undefined && savedState.progress > 0) {
                 progressArea.style.display = 'block';
                 progressBar.style.width = savedState.progress + '%';
@@ -1118,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 progressPercent.textContent = savedState.progress + '%';
             }
 
+            // Восстанавливаем статистику
             if (savedState.stats) {
                 totalLines.textContent = savedState.stats.total || 0;
                 successCount.textContent = savedState.stats.success || 0;
@@ -1128,6 +1026,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setButtonProcessing();
             disableDownloadButton('Идет обработка...');
 
+            // Запускаем интервалы
             if (!statusInterval) {
                 statusInterval = setInterval(fetchStatus, 2000);
             }
@@ -1140,13 +1039,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             addLog('Восстановлена обработка задачи: ' + currentJobId, 'info');
         } else {
+            // Если состояние устарело или нет активной задачи - очищаем
             clearState();
             setButtonIdle();
         }
     }
 
     // ============================================================
-    // 19. ИНИЦИАЛИЗАЦИЯ
+    // 18. ИНИЦИАЛИЗАЦИЯ
     // ============================================================
     clearLogs();
     setStatus('idle', 'Ожидание');
@@ -1156,13 +1056,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadHistory();
     restoreState();
-
-    checkGlobalLock().then(function(isLocked) {
-        if (isLocked) {
-            setButtonLocked();
-            dropZone.classList.add('disabled');
-        }
-    });
 
     historyInterval = setInterval(loadHistory, 30000);
 
