@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
         .badge-info { background: #dbeafe; color: #1e3a8a; }
 
         .btn-search {
-            padding: 8px 24px;
+            padding: 4px 16px;
             background: #2563eb;
             color: white;
             border: none;
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
         .btn-outline-danger { border: 1px solid #fca5a5; background: white; color: #dc2626 !important; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: all 0.2s; }
         .btn-outline-danger:hover { background: #fef2f2; color: #b91c1c !important; border-color: #f87171; }
         .btn-filter-reset {
-            padding: 8px 16px;
+            padding: 4px 16px;
             background: #e2e8f0;
             color: #475569;
             border: none;
