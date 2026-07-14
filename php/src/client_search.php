@@ -64,6 +64,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
         .table th { background: #f1f5f9; font-weight: 600; }
         .table td { vertical-align: middle; }
         .badge-info { background: #dbeafe; color: #1e3a8a; }
+
+        .btn-search {
+            padding: 8px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-search:hover {
+            background: #1d4ed8;
+        }
+        .btn-outline-danger { border: 1px solid #fca5a5; background: white; color: #dc2626 !important; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+        .btn-outline-danger:hover { background: #fef2f2; color: #b91c1c !important; border-color: #f87171; }
+        .btn-filter-reset {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            color: #475569;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn-filter-reset:hover {
+            background: #cbd5e1;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -80,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
                     <a href="list.php" class="btn btn-outline-primary me-2">
                         <i class="fas fa-list me-2"></i>Просмотр записей
                     </a>
-                    <a href="clear_db.php" class="btn btn-outline-danger" onclick="return confirm('Удалить все записи из БД?')">
+                    <a href="clear.php" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('Удалить все записи из БД?')">
                         <i class="fas fa-trash me-2"></i>Очистить БД
                     </a>
                 </div>
@@ -108,12 +142,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
                                    value="<?= htmlspecialchars($period) ?>" placeholder="Например: 519">
                         </div>
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary-gradient w-100">
+                            <button type="submit" class="btn-search">
                                 <i class="fas fa-search me-2"></i>Найти
                             </button>
                         </div>
                         <div class="col-md-2">
-                            <a href="client_search.php" class="btn btn-outline-secondary w-100">
+                            <a href="client_search.php" class="btn-filter-reset">
                                 <i class="fas fa-undo me-2"></i>Сбросить
                             </a>
                         </div>
@@ -173,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
             <?php endif; ?>
 
             <div class="mt-4">
-                <a href="index.html" class="btn btn-outline-secondary">
+                <a href="index.html" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-arrow-left me-2"></i>На главную
                 </a>
             </div>
