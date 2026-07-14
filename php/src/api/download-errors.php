@@ -24,7 +24,7 @@ if (count($files) === 1) {
     header('Content-Disposition: attachment; filename="' . basename($f) . '"');
     header('Content-Length: ' . filesize($f));
     readfile($f);
-    unlink($f);
+    // ❌ НЕ УДАЛЯЕМ - файл остается на сервере для повторного скачивания
     exit;
 }
 
@@ -36,15 +36,18 @@ if (!class_exists('ZipArchive')) {
         readfile($f);
         echo PHP_EOL;
     }
-    foreach ($files as $f) {
-        unlink($f);
-    }
+    // ❌ НЕ УДАЛЯЕМ
     exit;
 }
 
 $zipPath = sys_get_temp_dir() . '/errors_' . $jobId . '_' . uniqid() . '.zip';
 $zip = new ZipArchive();
-$zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+    http_response_code(500);
+    echo 'Не удалось создать архив';
+    exit;
+}
+
 foreach ($files as $f) {
     $zip->addFile($f, basename($f));
 }
@@ -55,6 +58,3 @@ header('Content-Disposition: attachment; filename="errors_' . $jobId . '.zip"');
 header('Content-Length: ' . filesize($zipPath));
 readfile($zipPath);
 unlink($zipPath);
-foreach ($files as $f) {
-    unlink($f);
-}
