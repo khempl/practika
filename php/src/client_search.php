@@ -60,7 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(37,99,235,0.35);
         }
-        .btn-outline-secondary:hover { background: #e2e8f0; }
+        .btn-outline-secondary { border: 1px solid #e2e8f0; background: white; color: #475569 !important; padding: 8px 20px; border-radius: 8px; font-weight: 500; transition: all 0.2s; }
+        .btn-outline-secondary:hover { background: #f1f5f9; color: #0f172a !important; border-color: #cbd5e1; }
         .table th { background: #f1f5f9; font-weight: 600; }
         .table td { vertical-align: middle; }
         .badge-info { background: #dbeafe; color: #1e3a8a; }
@@ -80,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
         .btn-search:hover {
             background: #1d4ed8;
         }
+        .btn-sm { padding: 4px 12px; font-size: 13px; }
         .btn-outline-danger { border: 1px solid #fca5a5; background: white; color: #dc2626 !important; padding: 6px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; transition: all 0.2s; }
         .btn-outline-danger:hover { background: #fef2f2; color: #b91c1c !important; border-color: #f87171; }
         .btn-filter-reset {
@@ -111,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
                     <i class="fas fa-search text-primary me-3"></i>Поиск начислений
                 </h1>
                 <div>
-                    <a href="list.php" class="btn btn-outline-primary me-2">
+                    <a href="list.php" class="btn btn-outline-secondary btn-sm">
                         <i class="fas fa-list me-2"></i>Просмотр записей
                     </a>
                     <a href="clear.php" class="btn btn-outline-danger btn-sm ms-2" onclick="return confirm('Удалить все записи из БД?')">
