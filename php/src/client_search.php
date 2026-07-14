@@ -148,12 +148,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && ($account || $address || $period)) {
                             <input type="text" class="form-control" id="period" name="period"
                                    value="<?= htmlspecialchars($period) ?>" placeholder="Например: 519">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-4 d-flex gap-2 align-items-end">
                             <button type="submit" class="btn-search">
                                 <i class="fas fa-search me-2"></i>Найти
                             </button>
-                        </div>
-                        <div class="col-md-2">
                             <a href="client_search.php" class="btn-filter-reset">
                                 <i class="fas fa-undo me-2"></i>Сбросить
                             </a>
